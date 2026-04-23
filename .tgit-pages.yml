@@ -1,0 +1,15 @@
+# 工蜂 Pages 部署配置
+pages:
+  stage: deploy
+  script:
+    - echo "Deploying to TGit Pages"
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+
+# 将根目录内容复制到 public
+before_script:
+  - mkdir -p public
+  - cp -r index.html assets public/
