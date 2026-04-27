@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>游戏活动页生成工具</title>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <style>
         :root {
             /* === SaaS Dark Admin (同 shenhe tool) === */
@@ -9234,6 +9235,66 @@ function updateUndoRedoButtons() {
 }
 
 // ===== Export =====
+/**
+ * html2canvas 兼容处理：在 cloneDocument 阶段替换掉不支持/渲染异常的样式
+ * 已知 html2canvas 1.4.x 不支持：
+ *   - mask-image / -webkit-mask-image
+ *   - box-shadow 的 inset 关键字（被忽略，导致按钮看起来扁平）
+ *   - ::before / ::after 伪元素（本工具未用到不处理）
+ * 处理策略：
+ *   1) 装饰图的 mask 渐变 → 用多层 opacity 叠加实现可视衰减
+ *   2) inset box-shadow → 用在元素上叠加一个 absolute 的渐变 overlay 模拟顶部高光 + 底部暗角
+ *   3) background 是 linear-gradient 的按钮保持原样（html2canvas 支持）
+ */
+function applyHtml2CanvasCompatFixes(clonedDoc) {
+    try {
+        // 1. 装饰图 mask：改为 div 容器 + 多层 opacity 渐变 overlay
+        clonedDoc.querySelectorAll('img').forEach(img => {
+            const cs = img.getAttribute('style') || '';
+            if(/mask-image/i.test(cs)) {
+                // 去掉 mask 相关样式
+                img.style.webkitMaskImage = '';
+                img.style.maskImage = '';
+                // 在 img 外包一层 wrapper，wrapper 里加一个 absolute 渐变 div 模拟衰减
+                // 由于 img 可能是 position:absolute，直接在父元素加一个兄弟 overlay 即可
+                const parent = img.parentElement;
+                if(parent) {
+                    const parentStyle = clonedDoc.defaultView.getComputedStyle(parent);
+                    if(parentStyle.position === 'static') {
+                        parent.style.position = 'relative';
+                    }
+                    // 推断渐变方向：从样式串解析
+                    // 主要两种：装饰（上 10% → 下 0%）、底部底纹（上 0% → 下 20%）
+                    let gradient;
+                    if(/rgba\(0,0,0,0\.10\)\s*0%,\s*rgba\(0,0,0,0\)\s*100%/.test(cs)) {
+                        // 顶部装饰：img 顶部更实，底部更淡
+                        gradient = 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,1) 100%)';
+                    } else {
+                        // 底部底纹类：顶部透明，底部 20%（由外层 overlay 处理，这里不再二次处理）
+                        gradient = null;
+                    }
+                    if(gradient) {
+                        const overlay = clonedDoc.createElement('div');
+                        overlay.style.cssText = 'position:absolute;inset:0;pointer-events:none;background:' + gradient + ';';
+                        parent.appendChild(overlay);
+                    }
+                }
+            }
+        });
+
+        // 2. 找到所有有 inline box-shadow:inset 的元素（按钮）：html2canvas 完全忽略 inset 阴影
+        //    这里不再尝试用 overlay 模拟（html2canvas 对渐变的 rgba 叠加经常产生可见矩形 artifact），
+        //    直接把 box-shadow 清空让按钮保持扁平——视觉上仍比"带白色斑块"好看得多。
+        clonedDoc.querySelectorAll('[style*="inset"]').forEach(el => {
+            const s = el.getAttribute('style') || '';
+            if(!/box-shadow[^;]*inset/i.test(s)) return;
+            el.style.boxShadow = 'none';
+        });
+    } catch(err) {
+        console.warn('[html2canvas compat] error:', err);
+    }
+}
+
 // 将容器内所有 <img> 的 src 转为 base64 DataURL，避免 html2canvas Tainted Canvas 错误
 // 关键：在 file:// 协议下，Canvas 绘制本地图片后也会被 taint，所以必须用 XHR 直接读取文件为 blob 再转 base64
 async function convertImagesToBase64(container) {
@@ -9305,13 +9366,18 @@ async function exportActualImage() {
         bar.style.width='30%'; txt.textContent='正在预处理图片资源...';
         await convertImagesToBase64(c1);
         bar.style.width='50%'; txt.textContent='正在生成实际样式图片...';
-        const canvas1 = await html2canvas(c1, {
-            scale:2, useCORS:true, allowTaint:true, backgroundColor:null, width:375, windowWidth:375,
-            logging:false, removeContainer:true
+        // 使用 html-to-image（对 mask-image / inset box-shadow / 多层 linear-gradient 均有正确支持）
+        const dataUrl = await htmlToImage.toPng(c1, {
+            pixelRatio: 2,
+            width: c1.offsetWidth,
+            height: c1.offsetHeight,
+            cacheBust: true,
+            backgroundColor: null,
+            style: { transform: 'none' },
         });
         const link1 = document.createElement('a');
         link1.download = `活动页_实际样式_${Date.now()}.png`;
-        link1.href = canvas1.toDataURL('image/png');
+        link1.href = dataUrl;
         link1.click();
         bar.style.width='100%'; txt.textContent='导出完成！';
         await new Promise(r=>setTimeout(r,600));
@@ -9344,13 +9410,17 @@ async function exportBgImage() {
         bar.style.width='30%'; txt.textContent='正在预处理图片资源...';
         await convertImagesToBase64(c2);
         bar.style.width='50%'; txt.textContent='正在生成底图图片...';
-        const canvas2 = await html2canvas(c2, {
-            scale:2, useCORS:true, allowTaint:true, backgroundColor:null, width:375, windowWidth:375,
-            logging:false, removeContainer:true
+        const dataUrl = await htmlToImage.toPng(c2, {
+            pixelRatio: 2,
+            width: c2.offsetWidth,
+            height: c2.offsetHeight,
+            cacheBust: true,
+            backgroundColor: null,
+            style: { transform: 'none' },
         });
         const link2 = document.createElement('a');
         link2.download = `活动页_底图_${Date.now()}.png`;
-        link2.href = canvas2.toDataURL('image/png');
+        link2.href = dataUrl;
         link2.click();
         bar.style.width='100%'; txt.textContent='导出完成！';
         await new Promise(r=>setTimeout(r,600));
@@ -9561,13 +9631,12 @@ async function confirmSlice(e) {
     try {
         await convertImagesToBase64(target);
         const _isFileProto = location.protocol === 'file:';
-        const canvas = await html2canvas(target, {
-            scale: 2,
-            useCORS: !_isFileProto,
-            allowTaint: false,
+        const dataUrl = await htmlToImage.toPng(target, {
+            pixelRatio: 2,
+            cacheBust: true,
             backgroundColor: null,
+            style: { transform: 'none' },
         });
-        const dataUrl = canvas.toDataURL('image/png');
         const id = 'slice_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
         const nameText = target.textContent.trim().substring(0, 20) || '按钮';
         sliceItems.push({ id, name: nameText, dataUrl });
