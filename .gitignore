@@ -1,2 +1,16 @@
-.DS_Store
+# IDE 元数据
 .codebuddy/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# 依赖
+node_modules/
+
+# 日志
+*.log
+
+# 临时文件
+*.tmp
+*.swp
