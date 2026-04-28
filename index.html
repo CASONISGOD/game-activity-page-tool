@@ -2516,7 +2516,7 @@
 <body>
 
 <!-- ===== Welcome Screen ===== -->
-<div class="welcome-overlay" id="welcomeOverlay">
+<div class="welcome-overlay hidden" id="welcomeOverlay" style="display:none">
     <div class="welcome-card">
         <div class="welcome-logo"><img src="assets/image/app-logo.svg" alt="logo"></div>
         <h2 class="welcome-title">游戏活动页生成工具</h2>
@@ -3096,6 +3096,54 @@ function _currentMoreInstanceId() {
     const m0 = modules.find(mm => mm.id === 'more');
     return m0 ? m0.instanceId : null;
 }
+
+// ===== 抽奖模块（lottery）数据：按 instanceId 隔离 =====
+const LOTTERY_MAX_PRIZE_GRID = 9; // 九宫格固定 9 个
+const LOTTERY_MIN_PRIZE_GRID = 1;
+const LOTTERY_DATA_TEMPLATE = {
+    title: '做任务天天抽大奖',
+    subtitle: '手机金条海量Q币抽到手软',
+    // 保底提示行
+    guaranteePrefix: '再抽',
+    guaranteeCount: '3',
+    guaranteeSuffix: '次即可获得保底奖励：',
+    guaranteePrize: '6Q币',
+    // 九宫格奖品（最多 9 个）
+    prizes: [
+        { name: 'iPhone 15Pro Max 512G*1', img: 'assets/image/morenjinbi.png' },
+        { name: '666Q币',                  img: 'assets/image/morenjinbi.png' },
+        { name: 'Au9999福字金条*1',         img: 'assets/image/morenjinbi.png' },
+        { name: '6Q币',                    img: 'assets/image/morenjinbi.png' },
+        { name: '冰冻结晶头像框*1',         img: 'assets/image/morenjinbi.png' },
+        { name: '萌萌雪人装扮*1',           img: 'assets/image/morenjinbi.png' },
+        { name: '+10装备强化券',            img: 'assets/image/morenjinbi.png' },
+        { name: '泰拉石追忆武器装扮*1',     img: 'assets/image/morenjinbi.png' },
+        { name: '深渊派对邀请函*200',       img: 'assets/image/morenjinbi.png' },
+    ],
+    // 两个抽奖按钮
+    btn1Text: '立即抽奖',
+    btn2Text: '十连抽',
+    // 底部信息
+    remainLabel: '剩余抽奖次数：10',
+    myPrizeLabel: '我的奖品',
+};
+let lotteryDataMap = {};
+function getLotteryData(instanceId) {
+    if(!instanceId) return null;
+    if(!lotteryDataMap[instanceId]) {
+        lotteryDataMap[instanceId] = JSON.parse(JSON.stringify(LOTTERY_DATA_TEMPLATE));
+    }
+    return lotteryDataMap[instanceId];
+}
+function _currentLotteryInstanceId() {
+    if(_expandedModuleId) {
+        const m = modules.find(mm => mm.instanceId === _expandedModuleId && mm.id === 'lottery');
+        if(m) return m.instanceId;
+    }
+    const m0 = modules.find(mm => mm.id === 'lottery');
+    return m0 ? m0.instanceId : null;
+}
+
 
 // ===== 抽奖组件模块数据 =====
 let drawBgColor = '#065A5C'; // 抽奖模块底色（深色）
@@ -3710,6 +3758,7 @@ let modules = [
     { instanceId: genInstanceId(), id:'redpacket', name:'口令码', desc:'口令码分享/好友助力/奖品展示', enabled:true },
     { instanceId: genInstanceId(), id:'signin',    name:'7天签到', desc:'连续签到领好礼，可选带抽奖',   enabled:true },
     { instanceId: genInstanceId(), id:'more',      name:'更多福利内容', desc:'多栏福利展示，可配置图标和名称', enabled:true },
+    { instanceId: genInstanceId(), id:'lottery',   name:'抽奖', desc:'九宫格奖品 + 保底提示 + 立即抽奖 / 十连抽', enabled:true },
 ];
 
 // 充值返利模块数据
@@ -4144,6 +4193,8 @@ const PM_META_KEY = 'game_activity_pm_meta'; // localStorage key for lightweight
 let currentProjectId = null; // 当前打开的项目 ID
 let currentProjectMeta = null; // { id, name, game, time, createdAt, updatedAt }
 let _autoSaveTimer = null;
+// 是否有未保存的改动（beforeunload 离开前提示，autoSave 完成后会清掉）
+let _isDirty = false;
 let pmCurrentPage = 1;
 const PM_PAGE_SIZE = 6;
 
@@ -4483,6 +4534,8 @@ async function saveCurrentProjectData() {
     if(!currentProjectId) return;
     const snapshot = getSnapshot();
     await saveProjectToDB(currentProjectId, snapshot);
+    // 保存成功：清除 dirty 标记
+    _isDirty = false;
 }
 
 // 自动保存（防抖 3 秒）
@@ -4766,7 +4819,7 @@ async function pmDeleteProject(id) {
         currentProjectId = null;
         currentProjectMeta = null;
         closePM();
-        showWelcome();
+        autoCreateUntitledProject();
         return;
     }
 
@@ -4788,7 +4841,7 @@ async function clearAllProjects() {
     currentProjectId = null;
     currentProjectMeta = null;
     closePM();
-    showWelcome();
+    autoCreateUntitledProject();
 }
 
 function pmEditProject(id) {
@@ -4861,10 +4914,12 @@ function resetAllSilent() {
     const initialIid = genInstanceId();
     const initialSigninIid = genInstanceId();
     const initialMoreIid = genInstanceId();
+    const initialLotteryIid = genInstanceId();
     modules.push(
         { instanceId: initialIid, id:'redpacket', name:'口令码', desc:'口令码分享/好友助力/奖品展示', enabled:true },
         { instanceId: initialSigninIid, id:'signin', name:'7天签到', desc:'连续签到领好礼，可选带抽奖', enabled:true },
         { instanceId: initialMoreIid, id:'more',   name:'更多福利内容', desc:'多栏福利展示，可配置图标和名称', enabled:true },
+        { instanceId: initialLotteryIid, id:'lottery', name:'抽奖', desc:'九宫格奖品 + 保底提示 + 立即抽奖 / 十连抽', enabled:true },
     );
     rechargeData = { title: '充值返利', subtitle: '这里是一句文案我也不知道写啥', bgColor: '#065A5C' };
     // 重置实例数据：清空 map，按当前模块表为每个口令码实例创建一份模板数据
@@ -4874,6 +4929,8 @@ function resetAllSilent() {
     signinDataMap[initialSigninIid] = JSON.parse(JSON.stringify(SIGNIN_DATA_TEMPLATE));
     moreDataMap = {};
     moreDataMap[initialMoreIid] = JSON.parse(JSON.stringify(MORE_DATA_TEMPLATE));
+    lotteryDataMap = {};
+    lotteryDataMap[initialLotteryIid] = JSON.parse(JSON.stringify(LOTTERY_DATA_TEMPLATE));
     roleData = { selectText: '点击选择角色' };
     assistData = { title: '攒好友助力兑奖品', subtitle: 'Q币每12小时补货一次，补完即止', taskTitle: '领积分，兑奖品', tasks: [
         { text: '每日登录本活动页面', reward: '+10积分', btnText: '立即领取' },
@@ -5123,10 +5180,52 @@ function loadDefaultHeaderAssets() {
 
 // ===== App Entry Point =====
 function appStart() {
-    // 始终显示欢迎页
-    showWelcome();
+    // 直接进入编辑页：创建一个"未命名项目"，跳过欢迎/选择界面
+    autoCreateUntitledProject();
     // 检测字体（延迟一下确保 document.fonts 可用）
     setTimeout(checkPingFangFont, 300);
+    // 关闭/刷新前：若有未保存的改动，弹窗提示
+    window.addEventListener('beforeunload', (e) => {
+        if(_isDirty) {
+            e.preventDefault();
+            // 多数现代浏览器会忽略自定义文本，展示通用的"离开/留在"提示
+            e.returnValue = '当前项目有未保存的改动，确定要离开吗？';
+            return e.returnValue;
+        }
+    });
+    // 关闭前尝试同步保存一次（pagehide 触发得比 unload 更可靠）
+    window.addEventListener('pagehide', () => {
+        if(_isDirty && currentProjectId) {
+            try {
+                // 同步保存（异步尽力而为，浏览器不保证一定完成）
+                saveCurrentProjectData();
+            } catch(_e) {}
+        }
+    });
+}
+
+/** 自动创建一个未命名项目（不弹窗、不需要用户操作） */
+function autoCreateUntitledProject() {
+    // 重置所有数据到默认状态
+    resetAllSilent();
+
+    // 创建项目
+    const id = genProjectId();
+    const now = Date.now();
+    const meta = { id, name: '未命名项目', game: '', time: '', createdAt: now, updatedAt: now };
+
+    currentProjectId = id;
+    currentProjectMeta = meta;
+    addProjectMeta(meta);
+
+    // 进入编辑器
+    hideWelcome();
+    updateHeaderProjectInfo();
+    init();
+    // 加载默认头部素材
+    loadDefaultHeaderAssets();
+    // 立即保存初始状态
+    saveCurrentProjectData();
 }
 
 // 检测 Windows 用户是否未安装 PingFang SC 字体
@@ -6280,6 +6379,15 @@ function getModuleDetailHtml(key) {
                 <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:4px" onclick="addMoreGroup('${key}')">＋ 添加一栏（最多 ${MORE_MAX_GROUPS} 栏）</button>
             </div>`;
         }
+        case 'lottery': {
+            return `
+            <div class="detail-sub-section">
+                <div class="detail-sub-title">奖品九宫格管理</div>
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">点击图标可上传替换；奖品名称 / 标题 / 按钮文字 / 保底文案均可在预览区直接编辑</div>
+                <div id="lotteryPrizeManageGrid_${key}" style="display:flex;flex-wrap:wrap;gap:12px"></div>
+                <div id="lotteryPrizeManageBtns_${key}"></div>
+            </div>`;
+        }
         case 'draw': return `
             <div class="detail-sub-section">
                 <div class="detail-sub-title">任务管理</div>
@@ -6348,6 +6456,9 @@ function _rerenderModuleDetail(key) {
             break;
         case 'more':
             renderMoreGroupList(key);
+            break;
+        case 'lottery':
+            renderLotteryPrizeManageGrid(key);
             break;
         case 'benefits':
             renderBenefitIconPanel();
@@ -6439,6 +6550,12 @@ function duplicateModule(i) {
             moreDataMap[newId] = JSON.parse(JSON.stringify(srcData));
         }
     }
+    if(src.id === 'lottery') {
+        const srcData = getLotteryData(src.instanceId);
+        if(srcData) {
+            lotteryDataMap[newId] = JSON.parse(JSON.stringify(srcData));
+        }
+    }
     if(moduleDecorations[src.instanceId]) {
         moduleDecorations[newId] = JSON.parse(JSON.stringify(moduleDecorations[src.instanceId]));
     }
@@ -6464,6 +6581,7 @@ function removeModule(i) {
     delete redpacketDataMap[target.instanceId];
     delete signinDataMap[target.instanceId];
     delete moreDataMap[target.instanceId];
+    delete lotteryDataMap[target.instanceId];
     delete moduleDecorations[target.instanceId];
     // 如果删的是当前展开的详情，折叠一下
     if(_expandedModuleId === target.instanceId) _expandedModuleId = null;
@@ -6846,6 +6964,7 @@ function renderModule(m, pc, isBgMode) {
         case 'skin': html = renderSkin(pc, isBgMode); break;
         case 'signin': html = renderSignin(pc, isBgMode, m); break;
         case 'more':   html = renderMore(pc, isBgMode, m); break;
+        case 'lottery':html = renderLottery(pc, isBgMode, m); break;
         case 'draw': html = renderDraw(pc, isBgMode); break;
         case 'recharge': html = renderRecharge(pc, isBgMode); break;
         case 'benefits': html = renderBenefits(pc, isBgMode); break;
@@ -8055,8 +8174,8 @@ function renderMore(pc, isBgMode, m) {
                 <div style="position:absolute;top:${24*S}px;left:${24*S}px;right:${192*S}px;height:${148*S}px;display:flex;align-items:flex-start;justify-content:center;gap:${42*S}px">
                     ${itemsHtml}
                 </div>
-                <div style="position:absolute;top:${66*S}px;right:${24*S}px;width:${144*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center">
-                    <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="gbtn${gi}" onblur="onMoreGroupFieldEdit(this,${gi},'btnText','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${g.btnText}</span>
+                <div style="position:absolute;top:${66*S}px;right:${24*S}px;width:${144*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;text-align:center;line-height:${64*S}px">
+                    <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC;line-height:${64*S}px;vertical-align:middle" class="editable-text" ${editable} data-field="gbtn${gi}" onblur="onMoreGroupFieldEdit(this,${gi},'btnText','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${g.btnText}</span>
                 </div>
             </div>`;
 
@@ -8214,6 +8333,178 @@ function uploadMoreItemImg(gi, ii, instanceId) {
     };
     input.click();
 }
+
+// ---- Module: 抽奖（lottery）按 Figma 654_11340 复刻 ----
+// 卡片宽 702（@2x），内宽 654，预览 S=0.5
+function renderLottery(pc, isBgMode, m) {
+    const iid = (m && m.instanceId) || _currentLotteryInstanceId();
+    const d = getLotteryData(iid);
+    const editable = 'contenteditable="true"';
+    const S = 0.5;
+
+    // 主题色 rgba（保底提示条背景用 0.10 透明度的主题色）
+    const rgb = hexOrColorToRgb(pc) || { r: 99, g: 165, b: 69 };
+    const guaranteeBg = `rgba(${rgb.r},${rgb.g},${rgb.b},0.10)`;
+
+    // 钻石/钱袋 svg 内联（极简风格）
+    const diamondSvg = `<svg width="${24*S}" height="${24*S}" viewBox="0 0 24 24" fill="none" style="display:inline-block;vertical-align:middle"><path d="M6 9l6-6 6 6-6 12L6 9z" stroke="${pc}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+    const walletSvg = `<svg width="${15*S}" height="${15*S}" viewBox="0 0 16 16" fill="none" style="display:inline-block;vertical-align:middle;margin-right:${4*S}px"><path d="M2 4h11v9H2z" stroke="#242424" stroke-width="1.2"/><path d="M11 7h2v3h-2z" fill="#242424"/></svg>`;
+    const arrowSvg = `<svg width="${12*S}" height="${22*S}" viewBox="0 0 6 10" fill="none" style="display:inline-block;vertical-align:middle"><path d="M1 1L5 5L1 9" stroke="#242424" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    // 保底提示条：80px 高，浅主题色背景 + 1px 描边，居中"图标 + 文字"
+    const guaranteeRow = `
+        <div style="width:100%;height:${80*S}px;background:${guaranteeBg};border:1px solid rgba(0,0,0,0.08);border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;gap:${8*S}px;font-size:${22*S}px;color:#242424;font-family:PingFang SC">
+            ${diamondSvg}
+            <span class="editable-text" ${editable} data-field="guaranteePrefix" onblur="onLotteryFieldEdit(this,'guaranteePrefix','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.guaranteePrefix}</span>
+            <span class="editable-text" ${editable} data-field="guaranteeCount" onblur="onLotteryFieldEdit(this,'guaranteeCount','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="color:${pc};font-weight:600">${d.guaranteeCount}</span>
+            <span class="editable-text" ${editable} data-field="guaranteeSuffix" onblur="onLotteryFieldEdit(this,'guaranteeSuffix','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.guaranteeSuffix}</span>
+            <span class="editable-text" ${editable} data-field="guaranteePrize" onblur="onLotteryFieldEdit(this,'guaranteePrize','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="color:${pc};font-weight:600">${d.guaranteePrize}</span>
+        </div>`;
+
+    // 九宫格奖品：3 列，每卡 213×213（@2x），gap 8（655 = 213*3 + 8*2 + 余 0）
+    // 用百分比：每卡宽 = 213/655*100% ≈ 32.52%，gap = 8/655*100% ≈ 1.22%
+    const cellW = 213 / 655 * 100;
+    const prizesHtml = (d.prizes || []).map((p, i) => `
+        <div style="width:${cellW}%;height:${213*S}px;background:#F6F7FA;border-radius:${16*S}px;overflow:hidden;position:relative;flex-shrink:0">
+            <div style="position:absolute;top:${32.5*S}px;left:50%;transform:translateX(-50%);width:${72*S}px;height:${72*S}px;border-radius:${16*S}px;overflow:hidden">
+                <img src="${p.img}" style="width:100%;height:100%;object-fit:cover">
+            </div>
+            <div style="position:absolute;top:${120.5*S}px;left:${24*S}px;right:${24*S}px;text-align:center;font-size:${24*S}px;color:#242424;line-height:1.25;font-family:PingFang SC;height:${60*S}px;display:flex;align-items:center;justify-content:center">
+                <span class="editable-text" ${editable} data-field="pname${i}" onblur="onLotteryPrizeEdit(this,${i},'name','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${p.name}</span>
+            </div>
+        </div>`).join('');
+
+    const prizesGrid = `
+        <div style="display:flex;flex-wrap:wrap;gap:${8*S}px;margin-top:${16*S}px">
+            ${prizesHtml}
+        </div>`;
+
+    // 两个按钮一行（319×80，gap 16）
+    const btnRow = `
+        <div style="display:flex;gap:${16*S}px;margin-top:${16*S}px">
+            <div style="flex:1;height:${80*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center">
+                <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="btn1Text" onblur="onLotteryFieldEdit(this,'btn1Text','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btn1Text}</span>
+            </div>
+            <div style="flex:1;height:${80*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center">
+                <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="btn2Text" onblur="onLotteryFieldEdit(this,'btn2Text','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btn2Text}</span>
+            </div>
+        </div>`;
+
+    // 底部信息行：左"剩余抽奖次数：10"，右"我的奖品 >"
+    const remainDisplay = isBgMode ? d.remainLabel.replace(/\d+/g, '') : d.remainLabel;
+    const infoRow = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:${36*S}px;font-size:${22*S}px;color:#242424;font-family:PingFang SC">
+            <span style="display:flex;align-items:center">
+                ${walletSvg}
+                <span class="editable-text" ${editable} data-field="remainLabel" onblur="onLotteryFieldEdit(this,'remainLabel','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${remainDisplay}</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:${4*S}px">
+                <span class="editable-text" ${editable} data-field="myPrizeLabel" onblur="onLotteryFieldEdit(this,'myPrizeLabel','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.myPrizeLabel}</span>
+                ${arrowSvg}
+            </span>
+        </div>`;
+
+    const titleHtml = `<span class="editable-text" ${editable} data-field="title" onblur="onLotteryFieldEdit(this,'title','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.title}</span>`;
+    const subtitleHtml = `<span class="editable-text" ${editable} data-field="subtitle" onblur="onLotteryFieldEdit(this,'subtitle','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.subtitle}</span>`;
+
+    const innerHtml = guaranteeRow + prizesGrid + btnRow + infoRow;
+
+    return renderModuleTemplate({
+        moduleId: iid,
+        title: titleHtml,
+        subtitle: subtitleHtml,
+        primaryColor: pc,
+        scale: S
+    }, innerHtml);
+}
+
+// 编辑回调
+function onLotteryFieldEdit(el, field, instanceId) {
+    const v = el.textContent.trim();
+    const d = getLotteryData(instanceId); if(!d) return;
+    if(v && v !== d[field]) { d[field] = v; renderPreview(); pushSnapshot(); }
+}
+function onLotteryPrizeEdit(el, idx, field, instanceId) {
+    const v = el.textContent.trim();
+    const d = getLotteryData(instanceId); if(!d) return;
+    if(v && d.prizes[idx] && v !== d.prizes[idx][field]) {
+        d.prizes[idx][field] = v;
+        renderPreview();
+        pushSnapshot();
+    }
+}
+
+// ===== 抽奖·左侧详情面板 =====
+function renderLotteryPrizeManageGrid(instanceId) {
+    const iid = instanceId || _currentLotteryInstanceId();
+    if(!iid) return;
+    const d = getLotteryData(iid);
+    const container = document.getElementById(`lotteryPrizeManageGrid_${iid}`);
+    if(!container) return;
+    container.innerHTML = (d.prizes || []).map((p, i) => `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;position:relative">
+            ${d.prizes.length > LOTTERY_MIN_PRIZE_GRID ? `<button class="reward-delete" onclick="event.stopPropagation();removeLotteryGridPrize(${i},'${iid}')" title="删除" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2">✕</button>` : ''}
+            <div class="icon-upload-item" onclick="uploadLotteryGridPrizeImg(${i},'${iid}')" title="点击替换图标">
+                <img src="${p.img}">
+            </div>
+            <div style="font-size:10px;color:var(--text-3);line-height:1;max-width:64px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name || '奖品'+(i+1)}</div>
+        </div>
+    `).join('');
+    const btnContainer = document.getElementById(`lotteryPrizeManageBtns_${iid}`);
+    if(btnContainer) {
+        const atMax = d.prizes.length >= LOTTERY_MAX_PRIZE_GRID;
+        btnContainer.innerHTML = `<div style="display:flex;gap:8px;margin-top:10px">
+            ${atMax ? '' : `<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="addLotteryGridPrize('${iid}')">＋ 添加奖品（最多 ${LOTTERY_MAX_PRIZE_GRID} 个）</button>`}
+            ${d.prizes.length > LOTTERY_MIN_PRIZE_GRID ? `<button class="btn btn-outline btn-sm" style="flex:0 0 auto;justify-content:center;color:var(--danger);border-color:rgba(248,113,113,0.35)" onclick="removeLastLotteryGridPrize('${iid}')">－ 删除末尾</button>` : ''}
+        </div>`;
+    }
+}
+
+function addLotteryGridPrize(instanceId) {
+    const d = getLotteryData(instanceId);
+    if(!d || d.prizes.length >= LOTTERY_MAX_PRIZE_GRID) return;
+    d.prizes.push({ name: '新奖品', img: 'assets/image/morenjinbi.png' });
+    renderLotteryPrizeManageGrid(instanceId);
+    renderPreview();
+    pushSnapshot();
+}
+function removeLotteryGridPrize(idx, instanceId) {
+    const d = getLotteryData(instanceId);
+    if(!d || d.prizes.length <= LOTTERY_MIN_PRIZE_GRID) return;
+    d.prizes.splice(idx, 1);
+    renderLotteryPrizeManageGrid(instanceId);
+    renderPreview();
+    pushSnapshot();
+}
+function removeLastLotteryGridPrize(instanceId) {
+    const d = getLotteryData(instanceId);
+    if(!d || d.prizes.length <= LOTTERY_MIN_PRIZE_GRID) return;
+    d.prizes.pop();
+    renderLotteryPrizeManageGrid(instanceId);
+    renderPreview();
+    pushSnapshot();
+}
+function uploadLotteryGridPrizeImg(idx, instanceId) {
+    const d = getLotteryData(instanceId);
+    if(!d || !d.prizes[idx]) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+        const f = e.target.files[0];
+        if(!f || !f.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            d.prizes[idx].img = ev.target.result;
+            renderLotteryPrizeManageGrid(instanceId);
+            renderPreview();
+            pushSnapshot();
+        };
+        reader.readAsDataURL(f);
+    };
+    input.click();
+}
+
 
 // ---- Module 6: 抽奖组件（深色模块） ----
 function renderDraw(pc, isBgMode) {
@@ -8746,10 +9037,12 @@ function resetAll() {
     const _initIid = genInstanceId();
     const _initSigninIid = genInstanceId();
     const _initMoreIid = genInstanceId();
+    const _initLotteryIid = genInstanceId();
     modules.push(
         { instanceId: _initIid, id:'redpacket', name:'口令码', desc:'口令码分享/好友助力/奖品展示', enabled:true },
         { instanceId: _initSigninIid, id:'signin', name:'7天签到', desc:'连续签到领好礼，可选带抽奖', enabled:true },
         { instanceId: _initMoreIid, id:'more',   name:'更多福利内容', desc:'多栏福利展示，可配置图标和名称', enabled:true },
+        { instanceId: _initLotteryIid, id:'lottery', name:'抽奖', desc:'九宫格奖品 + 保底提示 + 立即抽奖 / 十连抽', enabled:true },
     );
     // 恢复充值返利默认数据
     rechargeData = { title: '充值返利', subtitle: '这里是一句文案我也不知道写啥', bgColor: '#065A5C' };
@@ -8762,6 +9055,9 @@ function resetAll() {
     // 恢复更多福利默认数据
     moreDataMap = {};
     moreDataMap[_initMoreIid] = JSON.parse(JSON.stringify(MORE_DATA_TEMPLATE));
+    // 恢复抽奖模块默认数据
+    lotteryDataMap = {};
+    lotteryDataMap[_initLotteryIid] = JSON.parse(JSON.stringify(LOTTERY_DATA_TEMPLATE));
     // 恢复其他模块默认数据
     roleData = { selectText: '点击选择角色' };
     assistData = { title: '攒好友助力兑奖品', subtitle: 'Q币每12小时补货一次，补完即止', taskTitle: '领积分，兑奖品', tasks: [
@@ -8908,6 +9204,7 @@ function getSnapshot() {
         redpacketDataMap: JSON.parse(JSON.stringify(redpacketDataMap || {})),
         signinDataMap: JSON.parse(JSON.stringify(signinDataMap || {})),
         moreDataMap: JSON.parse(JSON.stringify(moreDataMap || {})),
+        lotteryDataMap: JSON.parse(JSON.stringify(lotteryDataMap || {})),
         // ===== 客态数据 =====
         currentView,
         guestColors: {...guestColors},
@@ -8930,6 +9227,8 @@ function pushSnapshot() {
     if(undoStack.length > MAX_HISTORY) undoStack.shift();
     redoStack = []; // 新操作清空重做栈
     updateUndoRedoButtons();
+    // 标记"有未保存改动"（beforeunload 离开前会弹窗提示）
+    _isDirty = true;
     // 触发自动保存
     triggerAutoSave();
 }
@@ -8963,11 +9262,11 @@ function restoreSnapshot(snapStr) {
     snap.modules.forEach(sm => {
         if(sm.id === 'footer') return; // footer不再作为可配置模块
         // 过滤掉已移除的内置模块（只保留 redpacket；如需扩展请在此补充）
-        const allowedIds = ['redpacket', 'signin', 'more'];
+        const allowedIds = ['redpacket', 'signin', 'more', 'lottery'];
         if(!allowedIds.includes(sm.id)) return;
         // 保留旧快照的 instanceId；旧版快照没有这个字段，则现生成一个
         // 模块名按 id 统一成无 emoji 版本（向后兼容，老快照带 emoji 的会被迁移）
-        const NAME_BY_ID = { redpacket: '口令码', signin: '7天签到', more: '更多福利内容' };
+        const NAME_BY_ID = { redpacket: '口令码', signin: '7天签到', more: '更多福利内容', lottery: '抽奖' };
         const normalizedName = NAME_BY_ID[sm.id] || sm.name;
         modules.push({instanceId: sm.instanceId || genInstanceId(), id:sm.id, name:normalizedName, desc:sm.desc, enabled:sm.enabled});
     });
@@ -9024,6 +9323,15 @@ function restoreSnapshot(snapStr) {
     }
     modules.forEach(mm => {
         if(mm.id === 'more') getMoreData(mm.instanceId);
+    });
+
+    // 恢复 lotteryDataMap（按 instanceId 隔离的抽奖模块数据）
+    lotteryDataMap = {};
+    if(snap.lotteryDataMap && typeof snap.lotteryDataMap === 'object') {
+        lotteryDataMap = JSON.parse(JSON.stringify(snap.lotteryDataMap));
+    }
+    modules.forEach(mm => {
+        if(mm.id === 'lottery') getLotteryData(mm.instanceId);
     });
 
     // 恢复其他模块的可编辑数据
