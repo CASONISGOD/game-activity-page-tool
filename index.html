@@ -125,7 +125,7 @@
 
         /* ===== Left Panel ===== */
         .panel-left {
-            width:440px; min-width:440px;
+            width:280px; min-width:280px;
             background:var(--bg-panel);
             border-right:1px solid var(--border);
             overflow:visible; padding:0;
@@ -559,6 +559,61 @@
         .module-detail-body .detail-sub-title::before {
             content:''; width:3px; height:12px; border-radius:2px; background:var(--primary);
         }
+
+        /* ===== Compact Left Operation Panel ===== */
+        .panel-left { font-size:11px; }
+        .panel-left-body { padding:10px; gap:10px; }
+        .panel-left .view-tab { padding:9px 0; font-size:12px; }
+        .panel-left .view-tab.active::after { width:36px; height:2px; }
+        .panel-left .section { padding:10px; border-radius:10px; }
+        .panel-left .section-title { font-size:12px; margin-bottom:8px; gap:6px; }
+        .panel-left .section-collapse-btn { width:20px; height:20px; font-size:11px; }
+        .panel-left .section-collapse-btn svg { width:11px; height:11px; }
+        .panel-left .module-count { font-size:10px; padding:1px 6px; border-radius:8px; }
+        .panel-left .sub-block { padding:8px 0; }
+        .panel-left .sub-block-title { font-size:11px; margin-bottom:6px; }
+        .panel-left .upload-area { padding:14px; border-radius:8px; }
+        .panel-left .upload-area .upload-icon { font-size:22px; margin-bottom:4px; }
+        .panel-left .upload-area p { font-size:11px; }
+        .panel-left .upload-area .hint { font-size:10px; margin-top:2px; }
+        .panel-left .btn { padding:4px 8px; font-size:11px; gap:4px; }
+        .panel-left .btn-sm { padding:3px 7px; font-size:10.5px; }
+        .panel-left .module-actions { gap:6px; margin-bottom:8px; }
+        .panel-left .modules-section-list { gap:8px; }
+        .panel-left .module-section { padding:9px 10px; border-radius:10px; }
+        .panel-left .module-section-header { gap:7px; font-size:11.5px; }
+        .panel-left .module-section-header input[type="checkbox"] { width:14px; height:14px; border-radius:4px; }
+        .panel-left .module-drag-handle { width:16px; height:16px; }
+        .panel-left .module-action-btn { width:18px; height:18px; font-size:11px; }
+        .panel-left .module-detail-toggle { width:22px; height:22px; }
+        .panel-left .module-detail-toggle svg { width:12px; height:12px; }
+        .panel-left .module-detail-body { margin-top:8px; padding-top:8px; }
+        .panel-left .module-detail-body .detail-sub-section { margin-bottom:10px; }
+        .panel-left .module-detail-body .detail-sub-title { font-size:11px; margin-bottom:6px; gap:4px; }
+        .panel-left .module-detail-body .detail-sub-title::before { width:2px; height:10px; }
+        .panel-left .color-row { gap:7px; margin-bottom:8px; }
+        .panel-left .color-row label { font-size:11px; width:58px; }
+        .panel-left .color-swatch { width:26px; height:26px; }
+        .panel-left .color-hex,
+        .panel-left .prop-input,
+        .panel-left input[type="text"],
+        .panel-left input[type="number"] { height:26px; font-size:11px; padding:0 7px; border-radius:5px; }
+        .panel-left input[type="range"] { height:18px; }
+        .panel-left .icon-upload-grid { gap:8px; }
+        .panel-left .icon-upload-item { width:32px; height:32px; padding:3px; }
+        .panel-left .icon-group-label { font-size:11px; margin-top:8px; margin-bottom:5px; }
+        .panel-left .skin-reward-grid { gap:5px; }
+        .panel-left .skin-reward-item { padding:3px; border-radius:6px; }
+        .panel-left .skin-reward-item .reward-img-wrap,
+        .panel-left .skin-task-img-wrap { width:30px; height:30px; border-radius:5px; }
+        .panel-left .skin-task-card { padding:7px 8px; gap:6px; border-radius:8px; }
+        .panel-left .skin-task-inputs input { height:22px; font-size:10px; padding:0 6px; }
+        .panel-left .poster-info-bar { margin-top:6px; padding:4px 0; gap:6px; }
+        .panel-left .poster-info-bar .poster-name { font-size:11px; }
+        .panel-left .poster-info-bar .poster-size { font-size:10px; }
+        .panel-left .poster-drag-hint { font-size:10.5px; padding:4px 8px; margin-top:6px; }
+        .panel-left [style*="font-size:12px"] { font-size:11px !important; }
+        .panel-left [style*="font-size:11px"] { font-size:10px !important; }
 
         /* ===== Center Preview ===== */
         .panel-center {
@@ -2139,6 +2194,18 @@
 
         .hidden { display:none !important; }
 
+        /* IP 浮层闪烁动画（上传后提示用户图片位置） */
+        @keyframes ip-flash {
+            0%   { opacity: 1; }
+            20%  { opacity: 0; }
+            40%  { opacity: 1; }
+            60%  { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        .ip-overlay-item.ip-flash {
+            animation: ip-flash 0.7s ease-in-out;
+        }
+
         /* ===== Welcome Screen ===== */
         .welcome-overlay {
             position:fixed; top:0; left:0; right:0; bottom:0;
@@ -2757,6 +2824,15 @@
                         <div id="headerLogoPreview"></div>
                     </div>
 
+                    <!-- 子模块 4：浏览器 Logo -->
+                    <div class="sub-block">
+                        <div class="sub-block-title">浏览器 Logo</div>
+                        <div style="font-size:11px;color:var(--text-3);margin-bottom:8px;line-height:1.5">
+                            固定使用默认 QQ 浏览器矢量 Logo，可调节在头图区域内的位置与大小。
+                        </div>
+                        <div id="headerBrowserLogoPreview"></div>
+                    </div>
+
                 </div>
             </div>
 
@@ -2799,21 +2875,25 @@
                     <div class="modules-section-list" id="moduleList"></div>
                 </div>
             </div>
-        </div>
-        <!-- 客态配置面板 -->
-        <div class="panel-left-body" id="guestPanel" style="display:none">
-            <!-- 客态顶部Logo配置 -->
-            <div class="section" id="gSectionLogos">
-                <div class="section-title" onclick="toggleSection('gSectionLogos')">
-                    顶部Logo
+
+            <!-- IP 配置 -->
+            <div class="section collapsed" id="sectionIp">
+                <div class="section-title" onclick="toggleSection('sectionIp')">
+                    IP 配置
                     <span class="section-collapse-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
                 </div>
                 <div class="section-body">
-                    <div id="gLogoList"></div>
-                    <button class="btn btn-outline btn-sm" onclick="addGuestLogo()" style="margin-top:8px;width:100%">+ 添加Logo</button>
+                    <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">上传任意张 IP 图片，覆盖在所有模块之上。预览区可<b>拖动改变位置</b>。每张图片独立缩放，默认 150×150px。</div>
+                    <div id="ipList"></div>
+                    <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;margin-top:8px" onclick="addIpImage()">＋ 添加 IP 图片</button>
                 </div>
             </div>
-
+        </div>
+        <!-- 客态配置面板 -->
+        <div class="panel-left-body" id="guestPanel" style="display:none">
+            <div style="margin:14px 0 14px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-elev-1);color:var(--text-3);font-size:12px;line-height:1.5">
+                页面基础配置直接复用主态，无需重复配置
+            </div>
             <!-- 客态模块配置 -->
             <div class="section" id="gSectionModules">
                 <div class="section-title" onclick="toggleSection('gSectionModules')">
@@ -2912,6 +2992,39 @@ let poster = null; // 单张海报：{ name, originalUrl, processedUrl, origWidt
 let headerBgImg = null; // 头图背景图：{ url, name } — 在头图区域最底层渐变透明显示(10%→0%)
 let headerTitleImg = null; // 头图标题切图：{ url, name, x, y, scale } — 可拖拽/缩放的标题图片
 let headerLogoImg = null; // 游戏 Logo 切图：{ url, name, x, y, scale } — 可拖拽/缩放的游戏 Logo
+let headerBrowserLogoImg = null; // 浏览器 Logo：{ url, name, x, y, scale } — 固定素材，可调位置/大小
+const DEFAULT_HEADER_LOGO_URL = 'assets/image/logo.png';
+const DEFAULT_HEADER_LOGO_TARGET_W_2X = 136;
+const DEFAULT_HEADER_LOGO_CACHE_BUST = Date.now();
+function isDefaultHeaderLogoUrl(url) {
+    return typeof url === 'string' && url.split('?')[0] === DEFAULT_HEADER_LOGO_URL;
+}
+function getDefaultHeaderLogoUrl() {
+    return `${DEFAULT_HEADER_LOGO_URL}?v=${DEFAULT_HEADER_LOGO_CACHE_BUST}`;
+}
+function getRenderableHeaderLogoUrl(url) {
+    return isDefaultHeaderLogoUrl(url) ? getDefaultHeaderLogoUrl() : url;
+}
+const HEADER_BROWSER_LOGO_URL = 'assets/CodeBuddyAssets/1002_1318/1.svg';
+const HEADER_BROWSER_LOGO_NATURAL_W = 243.7;
+const HEADER_BROWSER_LOGO_NATURAL_H = 48;
+function createDefaultHeaderBrowserLogo() {
+    return {
+        url: HEADER_BROWSER_LOGO_URL,
+        name: 'QQ浏览器 Logo',
+        naturalWidth: HEADER_BROWSER_LOGO_NATURAL_W,
+        naturalHeight: HEADER_BROWSER_LOGO_NATURAL_H,
+        x: 523 / 2,
+        y: 25 / 2,
+        scale: 0.42
+    };
+}
+function getHeaderImgByKind(kind) {
+    if(kind === 'title') return headerTitleImg;
+    if(kind === 'logo') return headerLogoImg;
+    if(kind === 'browserLogo') return headerBrowserLogoImg;
+    return null;
+}
 let colors = { background:'#2B5B39', primary:'#63A545' };
 let assistBgColor = '#065A5C'; // 通行证模块底色（必须为深色）
 let assistMode = 'noTask'; // 通行证模式：'noTask' 不带任务 | 'withTask' 带任务
@@ -2970,6 +3083,7 @@ const SKIN_MAX_REWARDS = 8; // 每组最多8个奖励（2行×4个）
 const SKIN_MAX_TASKS = 9; // 最多9条任务
 const LOTTERY_MAX_PRIZES = 5; // 抽奖奖品最多5个（Figma：一行 5 张卡）
 const LOTTERY_MAX_TASKS = 10; // 抽奖任务条最多10条
+const SIGNIN_LOTTERY_MAX_PRIZES = 12; // 签到带抽奖时奖品最多 12 个，每行最多 4 个
 const BENEFIT_MAX_ICONS = 3; // 福利卡片每侧最多3个图标
 
 // ===== 签到模块数据 =====
@@ -3023,7 +3137,6 @@ const SIGNIN_DATA_TEMPLATE = {
         { name: 'iPhone15ProMax*1',        img: 'assets/image/morenjinbi.png' },
         { name: 'Q币*88',                  img: 'assets/image/morenjinbi.png' },
         { name: '深渊派对邀请函*200',       img: 'assets/image/morenjinbi.png' },
-        { name: '泰拉石追忆武器装扮*1',     img: 'assets/image/morenjinbi.png' },
     ],
     lotteryBtn: '立即抽奖',
     lotteryCount: '剩余抽奖次数：10',
@@ -3293,6 +3406,229 @@ const BOTTOM_BG_FRAME_W = 750; // @2x 限制区域宽度
 const BOTTOM_BG_FRAME_H = 524; // @2x 限制区域高度
 const BOTTOM_BG_ASPECT = BOTTOM_BG_FRAME_H / BOTTOM_BG_FRAME_W; // ≈0.699
 let bottomBg;  // undefined / object
+
+// ===== IP 浮层图片 =====
+// 一组浮在所有模块最上层的可拖动图片，每张独立位置/缩放
+// 数据格式：{ url, x, y, scale, w, h }
+//   - x, y：相对预览容器（375 宽）左上角的 px 偏移
+//   - scale：用户调节的缩放（默认 1，对应 150×150 显示尺寸）
+//   - w, h：图片原始尺寸（用来按比例显示）
+const IP_DEFAULT_DISPLAY = 75; // 150px @2x = 75px @1x（预览）
+let ipList = [];
+
+function addIpImage() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true; // 支持一次选多张
+    input.onchange = (e) => {
+        const files = Array.from(e.target.files || []).filter(f => f && f.type.startsWith('image/'));
+        if(!files.length) { e.target.value = ''; return; }
+
+        const newIndices = []; // 记录本批新增的下标，用于闪烁
+        let pending = files.length;
+
+        files.forEach((f) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    ipList.push({
+                        url: ev.target.result,
+                        w: img.naturalWidth,
+                        h: img.naturalHeight,
+                        x: 150,
+                        y: 100,
+                        scale: 1
+                    });
+                    newIndices.push(ipList.length - 1);
+                    pending--;
+                    if(pending === 0) {
+                        renderIpList();
+                        renderPreview();
+                        pushSnapshot();
+                        // 闪烁刚刚新增的所有图，提示用户位置
+                        setTimeout(() => flashIpItems(newIndices), 50);
+                    }
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(f);
+        });
+        e.target.value = '';
+    };
+    input.click();
+}
+
+/** 让指定下标的 IP 节点在两个预览容器里闪烁两下 */
+function flashIpItems(indices) {
+    if(!indices || !indices.length) return;
+    ['previewContainer', 'previewContainerBg'].forEach(cid => {
+        const c = document.getElementById(cid);
+        if(!c) return;
+        indices.forEach(i => {
+            const node = c.querySelector('.ip-overlay .ip-overlay-item[data-idx="' + i + '"]');
+            if(!node) return;
+            node.classList.remove('ip-flash'); // 重置
+            // 强制重排再加回 class
+            void node.offsetWidth;
+            node.classList.add('ip-flash');
+        });
+    });
+}
+
+function removeIpImage(idx) {
+    if(idx < 0 || idx >= ipList.length) return;
+    if(!confirm('确定删除这张 IP 图片？')) return;
+    ipList.splice(idx, 1);
+    renderIpList();
+    renderPreview();
+    pushSnapshot();
+}
+
+function setIpImageScale(idx, scale) {
+    const it = ipList[idx];
+    if(!it) return;
+    const oldScale = it.scale;
+    const newScale = Math.max(0.2, Math.min(4, Number(scale) || 1));
+    if(newScale === oldScale) return;
+    // 中心缩放：保持图像中心点不变 → 调整 x/y
+    const ratio = it.h / Math.max(1, it.w);
+    const oldW = IP_DEFAULT_DISPLAY * oldScale;
+    const oldH = oldW * ratio;
+    const newW = IP_DEFAULT_DISPLAY * newScale;
+    const newH = newW * ratio;
+    const cx = it.x + oldW / 2;
+    const cy = it.y + oldH / 2;
+    it.scale = newScale;
+    it.x = cx - newW / 2;
+    it.y = cy - newH / 2;
+    // 直接更新两个预览容器中对应 IP 节点的位置/尺寸，避免整页重渲卡顿
+    ['previewContainer', 'previewContainerBg'].forEach(cid => {
+        const c = document.getElementById(cid);
+        if(!c) return;
+        const node = c.querySelector('.ip-overlay .ip-overlay-item[data-idx="' + idx + '"]');
+        if(!node) return;
+        node.style.width = newW + 'px';
+        node.style.height = newH + 'px';
+        node.style.left = it.x + 'px';
+        node.style.top = it.y + 'px';
+    });
+    // 防抖 push 快照
+    clearTimeout(setIpImageScale._timer);
+    setIpImageScale._timer = setTimeout(() => pushSnapshot(), 250);
+}
+
+function setIpImagePos(idx, x, y) {
+    if(!ipList[idx]) return;
+    ipList[idx].x = Number(x) || 0;
+    ipList[idx].y = Number(y) || 0;
+    renderPreview();
+    pushSnapshot();
+}
+
+function renderIpList() {
+    const slot = document.getElementById('ipList');
+    if(!slot) return;
+    if(!ipList.length) {
+        slot.innerHTML = '<div style="font-size:11px;color:var(--text-4);text-align:center;padding:12px">暂无 IP 图片，点击下方按钮添加</div>';
+        return;
+    }
+    slot.innerHTML = ipList.map((it, i) => {
+        const z = Math.round(it.scale * 100);
+        return `
+        <div style="padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg-elev-1);margin-bottom:10px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <div style="font-size:12px;color:var(--text-2);font-weight:500">第 ${i+1} 张</div>
+                <button class="module-action-btn danger" onclick="removeIpImage(${i})" title="删除">🗑</button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                <div style="width:48px;height:48px;border-radius:6px;background:var(--bg-elev-2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+                    <img src="${it.url}" style="max-width:100%;max-height:100%;object-fit:contain">
+                </div>
+                <div style="flex:1;font-size:11px;color:var(--text-3)">原始 ${it.w}×${it.h}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:11px;color:var(--text-3);width:30px">缩放</span>
+                <input type="range" min="20" max="400" step="1" value="${z}"
+                       style="flex:1;accent-color:var(--primary)"
+                       oninput="setIpImageScale(${i}, this.value/100); document.getElementById('ipScaleNum_${i}').value=this.value">
+                <input type="number" id="ipScaleNum_${i}" value="${z}" min="20" max="400" step="1" class="prop-input" style="width:56px;text-align:center"
+                       onchange="setIpImageScale(${i}, (+this.value)/100)">
+                <span style="font-size:11px;color:var(--text-4)">%</span>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+/** 在指定预览容器顶部覆盖 IP 浮层；isBgMode=true 时也照常显示 */
+function renderIpOverlay(container, isBgMode) {
+    if(!container) return;
+    if(!ipList || !ipList.length) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'ip-overlay';
+    overlay.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+    if(getComputedStyle(container).position === 'static') {
+        container.style.position = 'relative';
+    }
+    ipList.forEach((it, i) => {
+        const w = IP_DEFAULT_DISPLAY * it.scale;
+        const ratio = it.h / Math.max(1, it.w);
+        const h = w * ratio;
+        const node = document.createElement('div');
+        node.className = 'ip-overlay-item';
+        node.dataset.idx = i;
+        node.style.cssText = `position:absolute;left:${it.x}px;top:${it.y}px;width:${w}px;height:${h}px;cursor:${isBgMode ? 'default' : 'grab'};user-select:none;pointer-events:${isBgMode ? 'none' : 'auto'};z-index:${10 + i};`;
+        node.innerHTML = `<img src="${it.url}" draggable="false" style="width:100%;height:100%;object-fit:contain;display:block;pointer-events:none">`;
+        if(!isBgMode) attachIpDrag(node, i);
+        overlay.appendChild(node);
+    });
+    container.appendChild(overlay);
+}
+
+function attachIpDrag(node, idx) {
+    node.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const startX = e.clientX, startY = e.clientY;
+        const it = ipList[idx];
+        if(!it) return;
+        const baseX = it.x, baseY = it.y;
+        node.style.cursor = 'grabbing';
+        try { node.setPointerCapture(e.pointerId); } catch(_) {}
+        const onMove = (ev) => {
+            it.x = baseX + (ev.clientX - startX);
+            it.y = baseY + (ev.clientY - startY);
+            node.style.left = it.x + 'px';
+            node.style.top = it.y + 'px';
+            syncIpToBgPreview();
+        };
+        const onUp = (ev) => {
+            node.style.cursor = 'grab';
+            node.removeEventListener('pointermove', onMove);
+            node.removeEventListener('pointerup', onUp);
+            node.removeEventListener('pointercancel', onUp);
+            try { node.releasePointerCapture(e.pointerId); } catch(_) {}
+            pushSnapshot();
+        };
+        node.addEventListener('pointermove', onMove);
+        node.addEventListener('pointerup', onUp);
+        node.addEventListener('pointercancel', onUp);
+    });
+}
+
+function syncIpToBgPreview() {
+    const c2 = document.getElementById('previewContainerBg');
+    if(!c2) return;
+    const overlay = c2.querySelector('.ip-overlay');
+    if(!overlay) return;
+    const items = overlay.querySelectorAll('.ip-overlay-item');
+    items.forEach((node, i) => {
+        const it = ipList[i];
+        if(!it) return;
+        node.style.left = it.x + 'px';
+        node.style.top = it.y + 'px';
+    });
+}
 
 function getBottomBgUrl() {
     if(!bottomBg) return DEFAULT_BOTTOM_BG;
@@ -3862,37 +4198,42 @@ let guestHeaderLogos = [
 ];
 
 let guestModules = [
-    { id:'g_return',    name:'🎁 回归礼包', desc:'回归玩家专属礼包卡片', enabled:true },
-    { id:'g_redpacket', name:'🧧 红包开奖', desc:'好友红包开奖互动', enabled:true },
-    { id:'g_send',      name:'💌 发红包',   desc:'免费发红包领奖励', enabled:true },
+    { id:'g_return',    name:'回归礼包', desc:'回归玩家专属礼包卡片', enabled:true },
+    { id:'g_redpacket', name:'红包开奖', desc:'好友红包开奖互动', enabled:true },
+    { id:'g_send',      name:'发红包',   desc:'免费发红包领奖励', enabled:true },
 ];
 
 // 客态 - 回归礼包模块数据
-let gReturnData = {
-    title: '你是回归玩家\n快去领专属回归礼包吧！',
-    tag: '回归领4Q币',
-    btnText: '去参与',
-    prizeText: 'Q币、海量游戏道具',
-    prizeIcons: [
-        { url: 'assets/CodeBuddyAssets/579_273/1.png' },
-        { url: 'assets/CodeBuddyAssets/579_273/2.png' },
-        { url: 'assets/CodeBuddyAssets/579_273/3.png' },
-    ],
-    decoImg: 'assets/image/qbot.png',
-    emojiImg: GUEST_IMG + '23.png',
-};
+const G_RETURN_MAX_PRIZES = 12;
+const G_RETURN_DEFAULT_PRIZES = [
+    { name: 'iPhone15ProMax*1', img: 'assets/CodeBuddyAssets/982_776/6.svg' },
+    { name: '88Q币', img: 'assets/CodeBuddyAssets/982_776/7.png' },
+    { name: '冰冻结晶头像框*1', img: 'assets/CodeBuddyAssets/982_776/4.png' },
+    { name: '深渊派对邀请函*200', img: 'assets/CodeBuddyAssets/982_776/5.png' },
+];
+function createDefaultGReturnData() {
+    return {
+        title: '你是回归玩家 快去领专属回归礼包吧！',
+        subtitle: '回归必领4Q币，还有海量道具可领',
+        btnText: '去参与',
+        prizes: G_RETURN_DEFAULT_PRIZES.map(p => ({...p})),
+    };
+}
+let gReturnData = createDefaultGReturnData();
 
 // 客态 - 红包开奖模块数据
 let gRedpacketData = {
-    title: '你的好友',
+    title: '来自你的好友',
     subtitle: '送你一个游戏红包，快看看能抽中什么吧',
-    openCountLabel: '开奖次数：',
+    step1Text: '先点击助力你的好友',
+    step2Text: '再打开好友送你的红包',
+    openCountLabel: '开奖次数：10',
     recordLabel: '查看开奖记录',
-    btn1Text: '先助力',
-    btn2Text: '再打开',
+    btn1Text: '助力',
+    btn2Text: '打开',
     prizeImg1: GUEST_IMG + '14.png',
     prizeImg2: GUEST_IMG + '15.png',
-    lotteryImg: 'assets/image/redpot.png',
+    lotteryImg: 'assets/image/hongbao.png',
 };
 
 // 客态 - 发红包模块数据
@@ -3900,18 +4241,19 @@ let gSendData = {
     title: '免费发红包\u00A0领奖励',
     subtitle: '赠人红包，手留福利！快和游戏搭子一起发起来～',
     leftTag: '好友可抽',
-    rightTag: '我可以领',
+    rightTag: '我可以抽',
     leftPrizeText: 'Q币、海量游戏道具',
-    rightPrizeText: '亲密玫瑰、Q币',
+    rightPrizeText: '华为手机、周边、Q币',
     btnText: '我也去发一份',
     leftIcons: [
-        { url: GUEST_IMG + '16.png' },
-        { url: GUEST_IMG + '17.png' },
-        { url: GUEST_IMG + '18.png' },
+        { url: 'assets/CodeBuddyAssets/982_1225/4.png' },
+        { url: 'assets/CodeBuddyAssets/982_1225/5.png' },
+        { url: 'assets/CodeBuddyAssets/982_1225/6.png' },
     ],
     rightIcons: [
-        { url: GUEST_IMG + '19.png' },
-        { url: GUEST_IMG + '20.png' },
+        { url: 'assets/CodeBuddyAssets/982_1225/9.png' },
+        { url: 'assets/CodeBuddyAssets/982_1225/8.png' },
+        { url: 'assets/CodeBuddyAssets/982_1225/7.png' },
     ],
 };
 
@@ -4091,57 +4433,59 @@ function getGuestModuleDetailHtml(moduleId) {
     }
 }
 
-// ===== 客态 - 回归礼包奖品图标配置 =====
-const G_RETURN_MAX_ICONS = 3;
+// ===== 客态 - 回归礼包奖品配置（复用多宫格抽奖形式） =====
+function ensureGReturnPrizes() {
+    if(!gReturnData.prizes) {
+        const legacyIcons = gReturnData.prizeIcons || [];
+        gReturnData.prizes = legacyIcons.length
+            ? legacyIcons.map((ic, i) => ({ name: i === 0 ? (gReturnData.prizeText || 'Q币、海量游戏道具') : `奖品${i+1}`, img: ic.url }))
+            : G_RETURN_DEFAULT_PRIZES.map(p => ({...p}));
+    }
+    if(!gReturnData.subtitle) gReturnData.subtitle = '回归必领4Q币，还有海量道具可领';
+    if(!gReturnData.btnText) gReturnData.btnText = '去参与';
+}
 
 function renderGReturnIconConfig() {
-    const icons = gReturnData.prizeIcons || [];
-    const atMax = icons.length >= G_RETURN_MAX_ICONS;
+    ensureGReturnPrizes();
+    const prizes = gReturnData.prizes || [];
     return `
     <div style="padding:8px 0 4px">
-        <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:8px">奖品图标 <span style="color:var(--text-4);font-weight:400">(${icons.length}/${G_RETURN_MAX_ICONS})</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${icons.map((ic, idx) => `
-                <div style="position:relative;width:56px;height:56px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elev-2);display:flex;align-items:center;justify-content:center;overflow:hidden">
-                    <img src="${ic.url}" style="width:40px;height:40px;object-fit:contain;cursor:pointer" onclick="uploadGReturnIcon(${idx})" title="点击替换">
-                    ${icons.length > 1 ? `<button onclick="removeGReturnIcon(${idx})" style="position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.45);color:#fff;border:none;font-size:11px;line-height:18px;text-align:center;cursor:pointer;padding:0" title="删除">✕</button>` : ''}
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">奖品数量可配置，一排最多4个；点击图标可上传替换；奖品名称 / 标题 / 按钮文字可在预览区直接编辑</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-size:12px;color:var(--text-2)">道具数量</span>
+            <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setGReturnPrizeCount(gReturnData.prizes.length - 1)">－</button>
+            <input type="number" class="prop-input" min="1" max="${G_RETURN_MAX_PRIZES}" value="${prizes.length}" style="width:56px;text-align:center" onchange="setGReturnPrizeCount(+this.value)">
+            <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setGReturnPrizeCount(gReturnData.prizes.length + 1)">＋</button>
+            <span style="font-size:11px;color:var(--text-4)">/ 最多 ${G_RETURN_MAX_PRIZES}</span>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+            ${prizes.map((p, idx) => `
+                <div style="display:flex;flex-direction:column;align-items:center;gap:4px;position:relative">
+                    <div class="icon-upload-item" onclick="uploadGReturnPrizeImg(${idx})" title="点击替换图标">
+                        <img src="${p.img}">
+                    </div>
+                    <div style="font-size:10px;color:var(--text-3);line-height:1;max-width:64px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name || '奖品'+(idx+1)}</div>
                 </div>
             `).join('')}
         </div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-            ${atMax ? '' : '<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="addGReturnIcon()">＋ 添加图标</button>'}
-        </div>
     </div>`;
 }
-function addGReturnIcon() {
-    if(gReturnData.prizeIcons.length >= G_RETURN_MAX_ICONS) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e) => {
-        const f = e.target.files[0];
-        if(!f || !f.type.startsWith('image/')) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            gReturnData.prizeIcons.push({ url: ev.target.result });
-            renderGuestModuleList();
-            renderPreview();
-            pushSnapshot();
-        };
-        reader.readAsDataURL(f);
-    };
-    input.click();
-}
 
-function removeGReturnIcon(idx) {
-    if(gReturnData.prizeIcons.length <= 1) { alert('至少保留1个图标'); return; }
-    gReturnData.prizeIcons.splice(idx, 1);
+function setGReturnPrizeCount(target) {
+    ensureGReturnPrizes();
+    target = Math.max(1, Math.min(G_RETURN_MAX_PRIZES, Number(target) || 1));
+    while(gReturnData.prizes.length > target) gReturnData.prizes.pop();
+    while(gReturnData.prizes.length < target) {
+        gReturnData.prizes.push({ name: '新奖品', img: 'assets/image/morenjinbi.png' });
+    }
     renderGuestModuleList();
     renderPreview();
     pushSnapshot();
 }
 
-function uploadGReturnIcon(idx) {
+function uploadGReturnPrizeImg(idx) {
+    ensureGReturnPrizes();
+    if(!gReturnData.prizes[idx]) return;
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -4150,7 +4494,7 @@ function uploadGReturnIcon(idx) {
         if(!f || !f.type.startsWith('image/')) return;
         const reader = new FileReader();
         reader.onload = (ev) => {
-            gReturnData.prizeIcons[idx].url = ev.target.result;
+            gReturnData.prizes[idx].img = ev.target.result;
             renderGuestModuleList();
             renderPreview();
             pushSnapshot();
@@ -4158,6 +4502,16 @@ function uploadGReturnIcon(idx) {
         reader.readAsDataURL(f);
     };
     input.click();
+}
+
+function onGReturnPrizeEdit(el, idx) {
+    ensureGReturnPrizes();
+    const v = el.textContent.trim();
+    if(v && gReturnData.prizes[idx] && v !== gReturnData.prizes[idx].name) {
+        gReturnData.prizes[idx].name = v;
+        renderPreview();
+        pushSnapshot();
+    }
 }
 
 // ===== 客态 - 发红包图标配置 =====
@@ -4166,36 +4520,29 @@ const G_SEND_MAX_ICONS = 3; // 发红包模块每侧最多3个图标
 function renderGSendIconConfig() {
     const leftIcons = gSendData.leftIcons || [];
     const rightIcons = gSendData.rightIcons || [];
-    const leftAtMax = leftIcons.length >= G_SEND_MAX_ICONS;
-    const rightAtMax = rightIcons.length >= G_SEND_MAX_ICONS;
+    const renderSide = (side, label, icons) => {
+        const atMax = icons.length >= G_SEND_MAX_ICONS;
+        return `
+            <div class="icon-group-label">${label}</div>
+            <div class="icon-upload-grid">
+                ${icons.map((ic, idx) => `
+                    <div class="icon-upload-item" style="position:relative">
+                        ${icons.length > 1 ? `<button class="reward-delete" onclick="event.stopPropagation();removeGSendIcon('${side}',${idx})" title="删除" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2">✕</button>` : ''}
+                        <img src="${ic.url}" onclick="uploadGSendIcon('${side}',${idx})" title="点击替换图标" style="cursor:pointer">
+                    </div>
+                `).join('')}
+            </div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+                ${atMax ? '' : `<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="addGSendIcon('${side}')">＋ 添加图标</button>`}
+                ${icons.length > 1 ? `<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;color:var(--danger);border-color:rgba(248,113,113,0.35)" onclick="removeLastGSendIcon('${side}')">－ 删除末尾</button>` : ''}
+            </div>`;
+    };
     return `
     <div style="padding:8px 0 4px">
-        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">点击图标可上传替换，文案可在预览区直接编辑</div>
-        <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:8px">好友可抽 · 图标 <span style="color:var(--text-4);font-weight:400">(${leftIcons.length}/${G_SEND_MAX_ICONS})</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${leftIcons.map((ic, idx) => `
-                <div style="position:relative;width:56px;height:56px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elev-2);display:flex;align-items:center;justify-content:center;overflow:hidden">
-                    <img src="${ic.url}" style="width:40px;height:40px;object-fit:contain;cursor:pointer" onclick="uploadGSendIcon('left',${idx})" title="点击替换">
-                    ${leftIcons.length > 1 ? `<button onclick="removeGSendIcon('left',${idx})" style="position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.45);color:#fff;border:none;font-size:11px;line-height:18px;text-align:center;cursor:pointer;padding:0" title="删除">✕</button>` : ''}
-                </div>
-            `).join('')}
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-            ${leftAtMax ? '' : '<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="addGSendIcon(\'left\')">＋ 添加图标</button>'}
-        </div>
-
-        <div style="font-size:12px;font-weight:600;color:var(--text-2);margin:12px 0 8px">我可以领 · 图标 <span style="color:var(--text-4);font-weight:400">(${rightIcons.length}/${G_SEND_MAX_ICONS})</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-            ${rightIcons.map((ic, idx) => `
-                <div style="position:relative;width:56px;height:56px;border-radius:8px;border:1px solid var(--border);background:var(--bg-elev-2);display:flex;align-items:center;justify-content:center;overflow:hidden">
-                    <img src="${ic.url}" style="width:40px;height:40px;object-fit:contain;cursor:pointer" onclick="uploadGSendIcon('right',${idx})" title="点击替换">
-                    ${rightIcons.length > 1 ? `<button onclick="removeGSendIcon('right',${idx})" style="position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.45);color:#fff;border:none;font-size:11px;line-height:18px;text-align:center;cursor:pointer;padding:0" title="删除">✕</button>` : ''}
-                </div>
-            `).join('')}
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-            ${rightAtMax ? '' : '<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="addGSendIcon(\'right\')">＋ 添加图标</button>'}
-        </div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">配置能力复用主态「口令码」：左右奖池图标可上传、添加、删除；模块文案可在预览区直接编辑</div>
+        ${renderSide('left', '奖池1', leftIcons)}
+        <div style="height:12px"></div>
+        ${renderSide('right', '奖池2', rightIcons)}
     </div>`;
 }
 
@@ -4224,6 +4571,15 @@ function removeGSendIcon(side, idx) {
     const icons = side === 'left' ? gSendData.leftIcons : gSendData.rightIcons;
     if(icons.length <= 1) { alert('至少保留1个图标'); return; }
     icons.splice(idx, 1);
+    renderGuestModuleList();
+    renderPreview();
+    pushSnapshot();
+}
+
+function removeLastGSendIcon(side) {
+    const icons = side === 'left' ? gSendData.leftIcons : gSendData.rightIcons;
+    if(icons.length <= 1) { alert('至少保留1个图标'); return; }
+    icons.pop();
     renderGuestModuleList();
     renderPreview();
     pushSnapshot();
@@ -4591,6 +4947,11 @@ async function openHistoryProject(id) {
         undoStack = [snapshot];
         redoStack = [];
         updateUndoRedoButtons();
+    }
+
+    // 兜底：恢复后如果某些"默认应该有"的素材仍为空（旧版本项目可能没保存），自动加载默认
+    if(!poster || !poster.originalUrl || !headerTitleImg || !headerLogoImg) {
+        try { loadDefaultHeaderAssets(); } catch(e) { console.warn('[loadDefaultHeaderAssets] failed', e); }
     }
 }
 
@@ -4981,8 +5342,10 @@ function resetAllSilent() {
     headerBgImg = null;
     headerTitleImg = null;
     headerLogoImg = null;
+    headerBrowserLogoImg = createDefaultHeaderBrowserLogo();
     moduleDecorations = {};
     bottomBg = undefined;
+    ipList = [];
     colors = { background:'#2B5B39', primary:'#63A545' };
     assistBgColor = '#065A5C';
     assistMode = 'noTask';
@@ -5091,13 +5454,13 @@ function resetAllSilent() {
     ];
     guestModules.length = 0;
     guestModules.push(
-        { id:'g_return',    name:'🎁 回归礼包', desc:'回归玩家专属礼包卡片', enabled:true },
-        { id:'g_redpacket', name:'🧧 红包开奖', desc:'好友红包开奖互动', enabled:true },
-        { id:'g_send',      name:'💌 发红包',   desc:'免费发红包领奖励', enabled:true },
+        { id:'g_return',    name:'回归礼包', desc:'回归玩家专属礼包卡片', enabled:true },
+        { id:'g_redpacket', name:'红包开奖', desc:'好友红包开奖互动', enabled:true },
+        { id:'g_send',      name:'发红包',   desc:'免费发红包领奖励', enabled:true },
     );
-    gReturnData = { title: '你是回归玩家\n快去领专属回归礼包吧！', tag: '回归领4Q币', btnText: '去参与', prizeText: 'Q币、海量游戏道具', prizeIcons: [{url:'assets/CodeBuddyAssets/579_273/1.png'},{url:'assets/CodeBuddyAssets/579_273/2.png'},{url:'assets/CodeBuddyAssets/579_273/3.png'}] };
-    gRedpacketData = { title: '你的好友', subtitle: '送你一个游戏红包，快看看能抽中什么吧', openCountLabel: '开奖次数：', recordLabel: '查看开奖记录', btn1Text: '先助力', btn2Text: '再打开', prizeImg1: GUEST_IMG+'14.png', prizeImg2: GUEST_IMG+'15.png', lotteryImg: 'assets/image/redpot.png' };
-    gSendData = { title: '免费发红包\u00A0领奖励', subtitle: '赠人红包，手留福利！快和游戏搭子一起发起来～', leftTag: '好友可抽', rightTag: '我可以领', leftPrizeText: 'Q币、海量游戏道具', rightPrizeText: '亲密玫瑰、Q币', btnText: '我也去发一份', leftIcons: [{url:GUEST_IMG+'16.png'},{url:GUEST_IMG+'17.png'},{url:GUEST_IMG+'18.png'}], rightIcons: [{url:GUEST_IMG+'19.png'},{url:GUEST_IMG+'20.png'}] };
+    gReturnData = createDefaultGReturnData();
+    gRedpacketData = { title: '来自你的好友', subtitle: '送你一个游戏红包，快看看能抽中什么吧', step1Text: '先点击助力你的好友', step2Text: '再打开好友送你的红包', openCountLabel: '开奖次数：10', recordLabel: '查看开奖记录', btn1Text: '助力', btn2Text: '打开', prizeImg1: GUEST_IMG+'14.png', prizeImg2: GUEST_IMG+'15.png', lotteryImg: 'assets/image/hongbao.png' };
+    gSendData = { title: '免费发红包\u00A0领奖励', subtitle: '赠人红包，手留福利！快和游戏搭子一起发起来～', leftTag: '好友可抽', rightTag: '我可以抽', leftPrizeText: 'Q币、海量游戏道具', rightPrizeText: '华为手机、周边、Q币', btnText: '我也去发一份', leftIcons: [{url:'assets/CodeBuddyAssets/982_1225/4.png'},{url:'assets/CodeBuddyAssets/982_1225/5.png'},{url:'assets/CodeBuddyAssets/982_1225/6.png'}], rightIcons: [{url:'assets/CodeBuddyAssets/982_1225/9.png'},{url:'assets/CodeBuddyAssets/982_1225/8.png'},{url:'assets/CodeBuddyAssets/982_1225/7.png'}] };
     guestFooterData = { link1: '活动规则', link2: '中奖记录', link3: '意见反馈' };
     undoStack = [];
     redoStack = [];
@@ -5118,12 +5481,17 @@ function init() {
     } else {
         document.getElementById('uploadArea').classList.remove('hidden');
     }
+    // 初始化活动页头图 UI（缩略图 / 滑块等）
+    try { renderPosterPreview(); } catch(_) {}
     // 初始化头图背景 UI
     renderHeaderBgPreview();
     // 初始化头图标题切图 UI
     renderHeaderTitlePreview();
     // 初始化游戏 Logo 切图 UI
     renderHeaderLogoPreview();
+    // 初始化浏览器 Logo 控制 UI
+    if(!headerBrowserLogoImg) headerBrowserLogoImg = createDefaultHeaderBrowserLogo();
+    renderHeaderBrowserLogoPreview();
 
     // 初始化客态 UI 控件
 
@@ -5135,10 +5503,38 @@ function init() {
     renderGuestLogoList();
     renderModuleBaseDeco();
     renderBottomBgSection();
+    renderIpList();
     renderPreview();
     updateInfo();
     // 推入初始快照
     pushSnapshot();
+}
+
+/**
+ * 刷新默认游戏 Logo 素材。
+ * 如果项目使用的是默认 assets/image/logo.png，则重新读取磁盘上的最新文件，避免替换同名文件后仍显示旧缓存。
+ */
+function refreshDefaultHeaderLogoAsset() {
+    if(headerLogoImg && !isDefaultHeaderLogoUrl(headerLogoImg.url)) return;
+    const prev = headerLogoImg;
+    const img = new Image();
+    img.onload = () => {
+        const initScale = DEFAULT_HEADER_LOGO_TARGET_W_2X / img.naturalWidth / 2;
+        headerLogoImg = {
+            url: DEFAULT_HEADER_LOGO_URL,
+            name: 'logo.png',
+            naturalWidth: img.naturalWidth,
+            naturalHeight: img.naturalHeight,
+            x: prev && typeof prev.x === 'number' ? prev.x : 24 / 2,
+            y: prev && typeof prev.y === 'number' ? prev.y : 24 / 2,
+            scale: initScale
+        };
+        try {
+            renderHeaderLogoPreview();
+            renderPreview();
+        } catch(err) {}
+    };
+    img.src = getDefaultHeaderLogoUrl();
 }
 
 /**
@@ -5153,11 +5549,11 @@ function loadDefaultHeaderAssets() {
     const tasks = [];
 
     // ---- 1. 活动页头图 (poster) ----
-    if(!poster) {
+    if(!poster || !poster.originalUrl) {
         tasks.push(new Promise(resolve => {
             const img = new Image();
             img.onload = () => {
-                if(poster) { resolve(); return; }
+                if(poster && poster.originalUrl) { resolve(); return; }
                 poster = {
                     name: 'morentoutu.png',
                     originalUrl: 'assets/image/morentoutu.png',
@@ -5172,6 +5568,7 @@ function loadDefaultHeaderAssets() {
                 try {
                     generateProcessedPoster();
                     document.getElementById('uploadArea').classList.add('hidden');
+                    renderPosterPreview();
                 } catch(err) {}
                 resolve();
             };
@@ -5220,10 +5617,9 @@ function loadDefaultHeaderAssets() {
             const img = new Image();
             img.onload = () => {
                 if(headerLogoImg) { resolve(); return; }
-                const TARGET_W_2X = 136;
-                const initScale = TARGET_W_2X / img.naturalWidth / 2;
+                const initScale = DEFAULT_HEADER_LOGO_TARGET_W_2X / img.naturalWidth / 2;
                 headerLogoImg = {
-                    url: 'assets/image/logo.png',
+                    url: DEFAULT_HEADER_LOGO_URL,
                     name: 'logo.png',
                     naturalWidth: img.naturalWidth,
                     naturalHeight: img.naturalHeight,
@@ -5238,7 +5634,7 @@ function loadDefaultHeaderAssets() {
                 resolve();
             };
             img.onerror = () => resolve();
-            img.src = 'assets/image/logo.png';
+            img.src = getDefaultHeaderLogoUrl();
         }));
     }
 
@@ -5636,13 +6032,13 @@ function replaceHeaderTitle() {
     document.getElementById('headerTitleFileInput').click();
 }
 /**
- * 渲染头图切图的位置/缩放调节控件（用于 headerTitleImg / headerLogoImg）
+ * 渲染头图切图的位置/缩放调节控件（用于标题、游戏 Logo、浏览器 Logo）
  * 坐标系：预览区 375×262（即 @2x 设计稿 750×524 的一半）
  * 为了让用户看到 @2x 的"真实设计稿像素"，所有控件 × 2 显示
  * 缩放以"百分比"形式显示，按图片自身原始像素的相对比例计算（100% 即按 1:1 显示）
  *
- * @param {'title'|'logo'} kind
- * @param {object} img  headerTitleImg 或 headerLogoImg
+ * @param {'title'|'logo'|'browserLogo'} kind
+ * @param {object} img  headerTitleImg / headerLogoImg / headerBrowserLogoImg
  */
 function renderHeaderImgSliders(kind, img) {
     if(!img) return '';
@@ -5702,7 +6098,7 @@ function renderHeaderImgSliders(kind, img) {
 
 /** 更新位置 */
 function updateHeaderImgPos(kind, axis, val) {
-    const img = (kind === 'title') ? headerTitleImg : headerLogoImg;
+    const img = getHeaderImgByKind(kind);
     if(!img) return;
     img[axis] = Number(val);
     renderPreview();
@@ -5716,7 +6112,7 @@ function updateHeaderImgPos(kind, axis, val) {
  *      新 x = cx - (natW * newScale)/2 = oldX + natW * (oldScale - newScale) / 2
  */
 function updateHeaderImgScale(kind, newScale) {
-    const img = (kind === 'title') ? headerTitleImg : headerLogoImg;
+    const img = getHeaderImgByKind(kind);
     if(!img || !img.naturalWidth) return;
     newScale = Math.max(0.05, Math.min(5, Number(newScale)));
     const oldScale = img.scale || 1;
@@ -5750,12 +6146,16 @@ function resetHeaderImg(kind) {
         pushSnapshot();
     } else if(kind === 'logo' && headerLogoImg) {
         // 规格：136×42 @2x 距顶/左各 24px
-        const TARGET_W_2X = 136;
-        const initScale = TARGET_W_2X / headerLogoImg.naturalWidth / 2;
+        const initScale = DEFAULT_HEADER_LOGO_TARGET_W_2X / headerLogoImg.naturalWidth / 2;
         headerLogoImg.scale = initScale;
         headerLogoImg.x = 24 / 2;
         headerLogoImg.y = 24 / 2;
         renderHeaderLogoPreview();
+        renderPreview();
+        pushSnapshot();
+    } else if(kind === 'browserLogo') {
+        headerBrowserLogoImg = createDefaultHeaderBrowserLogo();
+        renderHeaderBrowserLogoPreview();
         renderPreview();
         pushSnapshot();
     }
@@ -5911,7 +6311,7 @@ function renderHeaderLogoPreview() {
     if(ua2) ua2.classList.add('hidden');
     el.innerHTML = `
         <div style="margin-top:8px;position:relative;border-radius:0;overflow:hidden;border:1px solid var(--border)">
-            <img src="${headerLogoImg.url}" style="display:block;width:100%;max-height:80px;object-fit:contain;background:var(--bg-page)">
+            <img src="${getRenderableHeaderLogoUrl(headerLogoImg.url)}" style="display:block;width:100%;max-height:80px;object-fit:contain;background:var(--bg-page)">
             <div style="position:absolute;top:4px;right:4px;display:flex;gap:4px;z-index:2">
                 <button onclick="replaceHeaderLogo()" title="替换" style="width:24px;height:24px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;background:rgba(0,0,0,0.5);color:#fff">🔄</button>
                 <button onclick="removeHeaderLogo()" title="删除" style="width:24px;height:24px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;background:rgba(0,0,0,0.5);color:#fff">✕</button>
@@ -5920,6 +6320,19 @@ function renderHeaderLogoPreview() {
         <div style="font-size:11px;color:var(--text-4);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${headerLogoImg.name}</div>
         <!-- 位置与大小控件 -->
         ${renderHeaderImgSliders('logo', headerLogoImg)}
+    `;
+}
+
+function renderHeaderBrowserLogoPreview() {
+    const el = document.getElementById('headerBrowserLogoPreview');
+    if(!el) return;
+    if(!headerBrowserLogoImg) headerBrowserLogoImg = createDefaultHeaderBrowserLogo();
+    el.innerHTML = `
+        <div style="margin-top:8px;position:relative;border-radius:0;overflow:hidden;border:1px solid var(--border);background:var(--bg-page);padding:10px">
+            <img src="${headerBrowserLogoImg.url}" style="display:block;max-width:100%;height:24px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))">
+        </div>
+        <div style="font-size:11px;color:var(--text-4);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${headerBrowserLogoImg.name}</div>
+        ${renderHeaderImgSliders('browserLogo', headerBrowserLogoImg)}
     `;
 }
 
@@ -6444,6 +6857,18 @@ function getModuleDetailHtml(key) {
             </div>
             ${isLottery ? `
             <div class="detail-sub-section">
+                <div class="detail-sub-title">抽奖 · 奖品管理</div>
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">奖品数量可配置（1 ~ ${SIGNIN_LOTTERY_MAX_PRIZES}），每行最多 4 个，点击图标可上传替换；奖品名称可在预览区直接编辑</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                    <span style="font-size:12px;color:var(--text-2)">奖品数量</span>
+                    <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setSigninLotteryPrizeCount('${key}', getSigninData('${key}').lottery.length - 1)">－</button>
+                    <input type="number" id="signinLotteryPrizeCount_${key}" class="prop-input" min="1" max="${SIGNIN_LOTTERY_MAX_PRIZES}" value="${d.lottery.length}" style="width:56px;text-align:center" onchange="setSigninLotteryPrizeCount('${key}', +this.value)">
+                    <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setSigninLotteryPrizeCount('${key}', getSigninData('${key}').lottery.length + 1)">＋</button>
+                    <span style="font-size:11px;color:var(--text-4)">/ 最多 ${SIGNIN_LOTTERY_MAX_PRIZES}</span>
+                </div>
+                <div id="signinLotteryPrizeGrid_${key}" style="display:flex;flex-wrap:wrap;gap:12px"></div>
+            </div>
+            <div class="detail-sub-section">
                 <div class="detail-sub-title">抽奖 · 任务管理</div>
                 <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">设置任务条数（1 ~ ${LOTTERY_MAX_TASKS} 条），任务图标统一为系统默认，文案可在预览区直接编辑</div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
@@ -6593,6 +7018,7 @@ function _rerenderModuleDetail(key) {
             renderSigninIconGrid(key);
             renderLotteryPrizeGrid(key);
             renderLotteryTaskPanel(key);
+            renderSigninLotteryPrizeGrid(key);
             break;
         case 'more':
             renderMoreGroupList(key);
@@ -7001,7 +7427,13 @@ function renderPreview() {
     // 游戏 Logo 切图 overlay HTML
     const hlImg = headerLogoImg;
     const hlW = hlImg ? hlImg.naturalWidth * hlImg.scale : 0;
-    const logoOverlayHtml = hlImg ? `<img class="header-logo-overlay" src="${hlImg.url}" style="position:absolute;left:${hlImg.x}px;top:${hlImg.y}px;width:${hlW}px;height:auto;pointer-events:none;z-index:6;user-select:none;-webkit-user-drag:none">` : '';
+    const logoOverlayHtml = hlImg ? `<img class="header-logo-overlay" src="${getRenderableHeaderLogoUrl(hlImg.url)}" style="position:absolute;left:${hlImg.x}px;top:${hlImg.y}px;width:${hlW}px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));pointer-events:none;z-index:6;user-select:none;-webkit-user-drag:none">` : '';
+
+    // 浏览器 Logo overlay HTML（固定素材，位置/大小由头部区域配置控制）
+    if(!headerBrowserLogoImg) headerBrowserLogoImg = createDefaultHeaderBrowserLogo();
+    const qbImg = headerBrowserLogoImg;
+    const qbW = qbImg.naturalWidth * qbImg.scale;
+    const qbLogoOverlayHtml = `<img src="${qbImg.url}" style="position:absolute;left:${qbImg.x}px;top:${qbImg.y}px;width:${qbW}px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));pointer-events:none;z-index:6;user-select:none;-webkit-user-drag:none">`;
 
     let html1 = '';
     html1 += `<div style="position:relative;width:375px;height:262px;overflow:hidden;z-index:0">`;
@@ -7013,6 +7445,7 @@ function renderPreview() {
     }
     if(titleOverlayHtml) html1 += titleOverlayHtml;
     if(logoOverlayHtml) html1 += logoOverlayHtml;
+    html1 += qbLogoOverlayHtml;
     html1 += `</div>`;
     // 选择角色+进入游戏是必选项，始终显示（模块区域整体上移与海报重叠）
     // modules-wrap：列方向 flex + gap 12px（= @2x 24px），统一所有相邻区块（角色入口/各模块/footer）间距
@@ -7039,6 +7472,7 @@ function renderPreview() {
     }
     if(titleOverlayHtml) html2 += titleOverlayHtml;
     if(logoOverlayHtml) html2 += logoOverlayHtml;
+    html2 += qbLogoOverlayHtml;
     html2 += `</div>`;
     // 底图：选择角色用占位，进入游戏按钮正常显示
     html2 += `<div class="modules-wrap" style="${overlap}display:flex;flex-direction:column;gap:12px">`;
@@ -7049,6 +7483,10 @@ function renderPreview() {
     html2 += renderFooterWithBottomBg(pc, true);
     html2 += `</div>`;
     c2.innerHTML = html2;
+
+    // 渲染 IP 浮层（覆盖在所有模块之上，可拖动）
+    renderIpOverlay(c1, false);
+    renderIpOverlay(c2, true);
 
     // 同步左右预览区每个模块的高度：右侧模块高度与左侧保持一致
     setTimeout(syncModuleHeights, 50);
@@ -7527,6 +7965,58 @@ function removeLastSigninTask(instanceId) {
     _rerenderModuleDetail(instanceId);
     renderPreview();
     pushSnapshot();
+}
+
+// ===== 签到带抽奖·奖品管理（多宫格风格，1~12 个、每行 4 个） =====
+function setSigninLotteryPrizeCount(instanceId, target) {
+    const d = getSigninData(instanceId);
+    if(!d) return;
+    target = Math.max(1, Math.min(SIGNIN_LOTTERY_MAX_PRIZES, Number(target) || 1));
+    while(d.lottery.length > target) d.lottery.pop();
+    while(d.lottery.length < target) {
+        d.lottery.push({ name: '新奖品', img: 'assets/image/morenjinbi.png' });
+    }
+    renderModuleList();
+    if(_expandedModuleId === instanceId) _rerenderModuleDetail(instanceId);
+    renderPreview();
+    pushSnapshot();
+}
+
+function renderSigninLotteryPrizeGrid(instanceId) {
+    const iid = instanceId || _currentSigninInstanceId();
+    if(!iid) return;
+    const d = getSigninData(iid);
+    const container = document.getElementById(`signinLotteryPrizeGrid_${iid}`);
+    if(!container) return;
+    container.innerHTML = (d.lottery || []).map((p, i) => `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div class="icon-upload-item" onclick="uploadSigninLotteryPrizeImg(${i},'${iid}')" title="点击替换图标">
+                <img src="${p.img}">
+            </div>
+            <div style="font-size:10px;color:var(--text-3);line-height:1;max-width:64px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name || '奖品'+(i+1)}</div>
+        </div>
+    `).join('');
+}
+
+function uploadSigninLotteryPrizeImg(idx, instanceId) {
+    const d = getSigninData(instanceId);
+    if(!d || !d.lottery[idx]) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+        const f = e.target.files[0];
+        if(!f || !f.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            d.lottery[idx].img = ev.target.result;
+            renderSigninLotteryPrizeGrid(instanceId);
+            renderPreview();
+            pushSnapshot();
+        };
+        reader.readAsDataURL(f);
+    };
+    input.click();
 }
 
 function uploadLotteryTaskImg(ti, instanceId) {
@@ -8188,29 +8678,38 @@ function renderSignin(pc, isBgMode, m) {
                 <span style="width:${32*S}px;height:1px;background:rgba(0,0,0,0.44)"></span>
             </div>`;
 
-        // 奖品区：5 张 144×190 卡，等分 + 间距 8（654-144*5=-66→实际 figma 每卡 152 间距 = 144+8=152，对）
-        // 实际 Figma：152,152,152... 最后卡左 608 即 152*4=608 ✓；gap = 152-144 = 8
-        // 页面底图：奖品由运营动态填充，整行不绘制内容但保留高度，确保上下与"页面实际样式"对齐
-        const prizesHtml = d.lottery.map((item, idx) => {
-            const w = 144 / 654 * 100; // 百分比
-            if(isBgMode) {
-                // 透明占位，仅保留尺寸
-                return `<div style="width:${w}%;height:${190*S}px;flex-shrink:0"></div>`;
-            }
-            return `
-            <div style="width:${w}%;height:${190*S}px;background:#F6F7FA;border-radius:${16*S}px;overflow:hidden;position:relative;flex-shrink:0">
-                <div style="position:absolute;top:${16*S}px;left:50%;transform:translateX(-50%);width:${72*S}px;height:${72*S}px;background:#fff;border-radius:${16*S}px;overflow:hidden">
-                    <img src="${item.img}" style="width:100%;height:100%;object-fit:cover">
-                </div>
-                <div style="position:absolute;top:${104*S}px;left:${16*S}px;right:${16*S}px;text-align:center;font-size:${22*S}px;color:#242424;line-height:1.3;font-family:PingFang SC">
-                    <span class="editable-text" ${editable} data-field="lname${idx}" onblur="onSigninLotteryEdit(this,${idx},'name','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${item.name}</span>
-                </div>
-            </div>`;
-        }).join('');
-
+        // 奖品区：多宫格风格——每行最多 4 个，每行按本行实际数量自适应铺满 654@2x。
+        // 页面底图：奖品由运营动态填充，整行不绘制内容但保留高度，确保上下与"页面实际样式"对齐。
+        const allLotteryPrizes = d.lottery || [];
+        const lotteryGap = 8 * S;
+        const lotteryRowSize = 4;
+        const lotteryRows = [];
+        for(let li = 0; li < allLotteryPrizes.length; li += lotteryRowSize) {
+            lotteryRows.push(allLotteryPrizes.slice(li, li + lotteryRowSize));
+        }
         const prizesRow = `
-            <div style="display:flex;gap:${8*S}px;margin-top:${16*S}px">
-                ${prizesHtml}
+            <div style="margin-top:${16*S}px">
+                ${lotteryRows.map((row, ri) => {
+                    const cols = row.length;
+                    const cellW = `calc((100% - ${(cols-1)*lotteryGap}px) / ${cols})`;
+                    return `<div style="display:flex;gap:${lotteryGap}px${ri > 0 ? ';margin-top:'+lotteryGap+'px' : ''}">${
+                        row.map((item, ii) => {
+                            const idx = ri * lotteryRowSize + ii;
+                            if(isBgMode) {
+                                return `<div style="width:${cellW};height:${190*S}px;flex-shrink:0"></div>`;
+                            }
+                            return `
+                            <div style="width:${cellW};height:${190*S}px;background:#F6F7FA;border-radius:${16*S}px;overflow:hidden;position:relative;flex-shrink:0">
+                                <div style="position:absolute;top:${16*S}px;left:50%;transform:translateX(-50%);width:${72*S}px;height:${72*S}px;background:#fff;border-radius:${16*S}px;overflow:hidden">
+                                    <img src="${item.img}" style="width:100%;height:100%;object-fit:cover">
+                                </div>
+                                <div style="position:absolute;top:${104*S}px;left:${16*S}px;right:${16*S}px;text-align:center;font-size:${22*S}px;color:#242424;line-height:1.3;font-family:PingFang SC">
+                                    <span class="editable-text" ${editable} data-field="lname${idx}" onblur="onSigninLotteryEdit(this,${idx},'name','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${item.name}</span>
+                                </div>
+                            </div>`;
+                        }).join('')
+                    }</div>`;
+                }).join('')}
             </div>`;
 
         // 立即抽奖按钮（16@2x 间距）
@@ -9299,136 +9798,158 @@ function renderBenefits(pc, isBgMode) {
 
 // 客态 - 渲染回归礼包模块
 function renderGuestReturn(pc, isBgMode) {
+    ensureGReturnPrizes();
     const d = gReturnData;
     const editable = 'contenteditable="true"';
     const S = 0.5;
-    const icons = d.prizeIcons || [];
-    const iconsHtml = icons.map(ic => `<img src="${ic.url}" style="width:${36}px;height:${36}px;object-fit:contain">`).join('');
-    const prizeText = d.prizeText || 'Q币、海量游戏道具';
-
-    return `
-    <div class="g-card" style="padding:${36*S}px;border-radius:${24*S}px">
-        <!-- 标题 -->
-        <div style="text-align:center;margin-bottom:${16*S}px">
-            <div style="font-size:${28*S}px;font-weight:600;font-family:PingFang SC,sans-serif;color:#242424">
-                <span class="editable-text" ${editable} data-field="title" onblur="onGuestModuleTextEdit(this,gReturnData,'title')" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.blur();}">${d.title.replace(/\\n/g,'<br>')}</span>
-            </div>
-        </div>
-
-        <!-- 奖品展示区 -->
-        <div style="background:#F6F7FA;border-radius:${16*S}px;overflow:hidden;position:relative;padding:${34*S}px ${6*S}px ${12*S}px;text-align:center">
-            <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);background:#F6F7FA;border-left:1px solid rgba(0,0,0,0.08);border-right:1px solid rgba(0,0,0,0.08);border-bottom:1px solid rgba(0,0,0,0.08);border-bottom-left-radius:${12*S}px;border-bottom-right-radius:${12*S}px;padding:${2*S}px ${12*S}px;font-size:${22*S}px;color:rgba(0,0,0,0.60)">
-                <span class="editable-text" ${editable} data-field="tag" onblur="onGuestModuleTextEdit(this,gReturnData,'tag')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.tag}</span>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:center;gap:${4}px;margin:${16*S}px 0 ${10*S}px;min-height:${36}px">
-                ${iconsHtml}
-            </div>
-            <div style="font-size:${22*S}px;color:#242424;font-family:PingFang SC">
-                <span class="editable-text" ${editable} data-field="prizeText" onblur="onGuestModuleTextEdit(this,gReturnData,'prizeText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${prizeText}</span>
-            </div>
-        </div>
-
-        <!-- 按钮 -->
-        <div style="display:flex;justify-content:center;margin-top:${16*S}px">
-            <div style="width:${319*S}px;height:${80*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center">
-                <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="btnText" onblur="onGuestModuleTextEdit(this,gReturnData,'btnText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btnText}</span>
-            </div>
-        </div>
-    </div>`;
+    const prizes = d.prizes || [];
+    const rows = [];
+    for(let i = 0; i < prizes.length; i += 4) rows.push(prizes.slice(i, i + 4));
+    const prizeRowsHtml = rows.map((row, rowIdx) => `
+        <div style="display:grid;grid-template-columns:repeat(${row.length},1fr);gap:${16*S}px;margin-top:${rowIdx === 0 ? 0 : 16*S}px">
+            ${row.map((p, idxInRow) => {
+                const idx = rowIdx * 4 + idxInRow;
+                return `
+                <div style="height:${180*S}px;background:#F6F7FA;border-radius:${16*S}px;display:flex;flex-direction:column;align-items:center;overflow:hidden">
+                    <div style="width:${72*S}px;height:${72*S}px;margin-top:${16*S}px;border-radius:${16*S}px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center">
+                        <img src="${p.img}" style="width:100%;height:100%;object-fit:contain;display:block">
+                    </div>
+                    <div style="width:calc(100% - ${32*S}px);margin-top:${16*S}px;text-align:center;font-size:${22*S}px;line-height:${30*S}px;color:#242424;font-family:PingFang SC;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all">
+                        <span class="editable-text" ${editable} onblur="onGReturnPrizeEdit(this,${idx})" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${p.name || '奖品'+(idx+1)}</span>
+                    </div>
+                </div>`;
+            }).join('')}
+        </div>`).join('');
+    const titleHtml = `<span class="editable-text" ${editable} data-field="title" onblur="onGuestModuleTextEdit(this,gReturnData,'title')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.title}</span>`;
+    const subtitleHtml = `<span class="editable-text" ${editable} data-field="subtitle" onblur="onGuestModuleTextEdit(this,gReturnData,'subtitle')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.subtitle}</span>`;
+    const innerHtml = `
+        ${prizeRowsHtml}
+        <div style="height:${80*S}px;margin-top:${16*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center">
+            <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="btnText" onblur="onGuestModuleTextEdit(this,gReturnData,'btnText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btnText}</span>
+        </div>`;
+    return renderModuleTemplate({
+        moduleId: 'g_return',
+        title: titleHtml,
+        subtitle: subtitleHtml,
+        primaryColor: pc,
+        scale: S
+    }, innerHtml);
 }
 
 // 客态 - 渲染红包开奖模块
 function renderGuestRedpacket(pc, isBgMode) {
     const d = gRedpacketData;
+    if(!d.step1Text) d.step1Text = '先点击助力你的好友';
+    if(!d.step2Text) d.step2Text = '再打开好友送你的红包';
+    if(!d.lotteryImg || d.lotteryImg.includes('redpot.png')) d.lotteryImg = 'assets/image/hongbao.png';
+    const openCountText = String(d.openCountLabel || '开奖次数：').replace(/[0-9０-９]+\s*$/, '').trim();
     const editable = 'contenteditable="true"';
     const S = 0.5;
-    return `
-    <div class="g-card" style="padding:${36*S}px;border-radius:${24*S}px">
-        <!-- 标题 -->
-        <div style="text-align:center;margin-bottom:${8*S}px">
-            <div style="font-size:${28*S}px;font-weight:600;font-family:PingFang SC,sans-serif;color:#242424;display:flex;align-items:center;justify-content:center;gap:${8*S}px">
-                <span class="editable-text" ${editable} data-field="title" onblur="onGuestModuleTextEdit(this,gRedpacketData,'title')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.title}</span>
-            </div>
-            <div style="font-size:${22*S}px;color:rgba(0,0,0,0.60);margin-top:${8*S}px;font-family:PingFang SC">
-                <span class="editable-text" ${editable} data-field="subtitle" onblur="onGuestModuleTextEdit(this,gRedpacketData,'subtitle')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.subtitle}</span>
+    const redpacketSrc = d.lotteryImg || 'assets/image/hongbao.png';
+    const titleHtml = `<span class="editable-text" ${editable} data-field="title" onblur="onGuestModuleTextEdit(this,gRedpacketData,'title')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.title}</span>`;
+    const subtitleHtml = `<span class="editable-text" ${editable} data-field="subtitle" onblur="onGuestModuleTextEdit(this,gRedpacketData,'subtitle')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.subtitle}</span>`;
+    const innerHtml = `
+        <div style="height:${300*S}px;position:relative;margin:0 ${51*S}px 0">
+            <img src="${redpacketSrc}" style="position:absolute;left:0;top:0;width:${225*S}px;height:${300*S}px;object-fit:contain;display:block">
+            <div style="position:absolute;left:${289*S}px;top:${15*S}px;width:${264*S}px;height:${270*S}px">
+                <div style="position:absolute;left:${8*S}px;top:${25*S}px;width:1px;height:${158*S}px;background:rgba(0,0,0,0.08)"></div>
+                <div style="position:absolute;left:0;top:0;width:100%;height:${32*S}px;display:flex;align-items:center;gap:${12*S}px">
+                    <div style="position:relative;width:${32*S}px;height:${32*S}px;flex:none">
+                        <img src="assets/CodeBuddyAssets/982_920/6.svg" style="width:100%;height:100%;display:block">
+                        <span style="position:absolute;left:0;right:0;top:${2*S}px;text-align:center;font-size:${20*S}px;line-height:${28*S}px;color:#B3B3B3;font-family:PingFang SC;font-weight:500">1</span>
+                    </div>
+                    <span class="editable-text" ${editable} data-field="step1Text" onblur="onGuestModuleTextEdit(this,gRedpacketData,'step1Text')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="font-size:${22*S}px;line-height:${30*S}px;color:#242424;font-family:PingFang SC;white-space:nowrap">${d.step1Text}</span>
+                </div>
+                <div style="position:absolute;left:${44*S}px;top:${47*S}px;width:${200*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center">
+                    <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="btn1Text" onblur="onGuestModuleTextEdit(this,gRedpacketData,'btn1Text')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btn1Text}</span>
+                </div>
+                <div style="position:absolute;left:0;top:${159*S}px;width:100%;height:${32*S}px;display:flex;align-items:center;gap:${12*S}px">
+                    <div style="position:relative;width:${32*S}px;height:${32*S}px;flex:none">
+                        <img src="assets/CodeBuddyAssets/982_920/7.svg" style="width:100%;height:100%;display:block">
+                        <span style="position:absolute;left:0;right:0;top:${2*S}px;text-align:center;font-size:${20*S}px;line-height:${28*S}px;color:#B3B3B3;font-family:PingFang SC;font-weight:500">2</span>
+                    </div>
+                    <span class="editable-text" ${editable} data-field="step2Text" onblur="onGuestModuleTextEdit(this,gRedpacketData,'step2Text')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="font-size:${22*S}px;line-height:${30*S}px;color:#242424;font-family:PingFang SC;white-space:nowrap">${d.step2Text}</span>
+                </div>
+                <div style="position:absolute;left:${44*S}px;top:${206*S}px;width:${200*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center">
+                    <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="btn2Text" onblur="onGuestModuleTextEdit(this,gRedpacketData,'btn2Text')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btn2Text}</span>
+                </div>
             </div>
         </div>
-
-        <!-- 红包图片 -->
-        <div style="text-align:center;margin:${16*S}px 0">
-            <img src="${d.lotteryImg}" style="width:${702*S}px;max-width:100%;height:auto;display:block;margin:0 auto">
-        </div>
-
-        <!-- 两个按钮 -->
-        <div style="display:flex;gap:${12*S}px;margin-top:${16*S}px">
-            <div style="flex:1;height:${80*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;cursor:pointer">
-                <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC;font-weight:500" class="editable-text" ${editable} data-field="btn1Text" onblur="onGuestModuleTextEdit(this,gRedpacketData,'btn1Text')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btn1Text}</span>
+        <div style="height:${30*S}px;margin-top:${36*S}px;display:flex;align-items:center;justify-content:space-between;font-size:${22*S}px;line-height:${30*S}px;color:#242424;font-family:PingFang SC">
+            <div style="display:flex;align-items:center;gap:${4*S}px">
+                <img src="assets/CodeBuddyAssets/982_920/8.svg" style="width:${30*S}px;height:${30*S}px;display:block">
+                <span class="editable-text" ${editable} data-field="openCountLabel" onblur="onGuestModuleTextEdit(this,gRedpacketData,'openCountLabel')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${openCountText}</span>
             </div>
-            <div style="flex:1;height:${80*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;cursor:pointer">
-                <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC;font-weight:500" class="editable-text" ${editable} data-field="btn2Text" onblur="onGuestModuleTextEdit(this,gRedpacketData,'btn2Text')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btn2Text}</span>
+            <div style="display:flex;align-items:center;gap:${0}px">
+                <span class="editable-text" ${editable} data-field="recordLabel" onblur="onGuestModuleTextEdit(this,gRedpacketData,'recordLabel')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.recordLabel}</span>
+                <img src="assets/CodeBuddyAssets/982_920/9.svg" style="width:${24*S}px;height:${24*S}px;display:block">
             </div>
-        </div>
-
-        <!-- 开奖次数 / 开奖记录 -->
-        <div style="display:flex;gap:${8*S}px;margin-top:${16*S}px;font-size:${22*S}px;color:rgba(0,0,0,0.60);font-family:PingFang SC">
-            <span style="flex:1;text-align:center"><span class="editable-text" ${editable} data-field="openCountLabel" onblur="onGuestModuleTextEdit(this,gRedpacketData,'openCountLabel')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.openCountLabel}</span></span>
-            <span style="width:1px;background:rgba(0,0,0,0.12)"></span>
-            <span style="flex:1;text-align:center"><span class="editable-text" ${editable} data-field="recordLabel" onblur="onGuestModuleTextEdit(this,gRedpacketData,'recordLabel')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.recordLabel}</span></span>
-        </div>
-    </div>`;
+        </div>`;
+    return renderModuleTemplate({
+        moduleId: 'g_redpacket',
+        title: titleHtml,
+        subtitle: subtitleHtml,
+        primaryColor: pc,
+        scale: S
+    }, innerHtml);
 }
 
 // 客态 - 渲染发红包模块
 function renderGuestSend(pc, isBgMode) {
     const d = gSendData;
+    if(d.rightTag === '我可以领') d.rightTag = '我可以抽';
+    if(d.rightPrizeText === '亲密玫瑰、Q币') d.rightPrizeText = '华为手机、周边、Q币';
+    const _oldLeft = (d.leftIcons || []).some(ic => (ic.url || '').includes('334_1327/16.png'));
+    const _oldRight = (d.rightIcons || []).some(ic => (ic.url || '').includes('334_1327/19.png'));
+    if(_oldLeft) d.leftIcons = [{url:'assets/CodeBuddyAssets/982_1225/4.png'},{url:'assets/CodeBuddyAssets/982_1225/5.png'},{url:'assets/CodeBuddyAssets/982_1225/6.png'}];
+    if(_oldRight) d.rightIcons = [{url:'assets/CodeBuddyAssets/982_1225/9.png'},{url:'assets/CodeBuddyAssets/982_1225/8.png'},{url:'assets/CodeBuddyAssets/982_1225/7.png'}];
     const editable = 'contenteditable="true"';
     const S = 0.5;
-    const leftIconsHtml = (d.leftIcons||[]).map(ic => `<img src="${ic.url}" style="width:36px;height:36px;object-fit:contain">`).join('');
-    const rightIconsHtml = (d.rightIcons||[]).map(ic => `<img src="${ic.url}" style="width:36px;height:36px;object-fit:contain">`).join('');
-
-    return `
-    <div class="g-card" style="padding:${36*S}px;border-radius:${24*S}px">
-        <!-- 标题 -->
-        <div style="text-align:center;margin-bottom:${4*S}px">
-            <div style="font-size:${28*S}px;font-weight:600;font-family:PingFang SC,sans-serif;color:#242424">
-                <span class="editable-text" ${editable} data-field="title" onblur="onGuestModuleTextEdit(this,gSendData,'title')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.title}</span>
-            </div>
-            <div style="font-size:${20*S}px;color:rgba(0,0,0,0.60);margin-top:${8*S}px;font-family:PingFang SC">
-                <span class="editable-text" ${editable} data-field="subtitle" onblur="onGuestModuleTextEdit(this,gSendData,'subtitle')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.subtitle}</span>
-            </div>
-        </div>
-
-        <!-- 奖品展示 -->
-        <div style="display:flex;gap:${16*S}px;margin-top:${16*S}px">
-            <div style="flex:1;background:#F6F7FA;border-radius:${16*S}px;overflow:hidden;position:relative;padding:${34*S}px ${6*S}px ${12*S}px;text-align:center">
-                <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);background:#F6F7FA;border-left:1px solid rgba(0,0,0,0.08);border-right:1px solid rgba(0,0,0,0.08);border-bottom:1px solid rgba(0,0,0,0.08);border-bottom-left-radius:${12*S}px;border-bottom-right-radius:${12*S}px;padding:${2*S}px ${12*S}px;font-size:${22*S}px;color:rgba(0,0,0,0.60)">
+    const leftIconsHtml = (d.leftIcons || []).map(ic => `
+        <div style="width:${72*S}px;height:${72*S}px;overflow:hidden;border-radius:${16*S}px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+            <img src="${ic.url}" style="width:100%;height:100%;object-fit:contain;display:block">
+        </div>`).join('');
+    const rightIconsHtml = (d.rightIcons || []).map(ic => `
+        <div style="width:${72*S}px;height:${72*S}px;overflow:hidden;border-radius:${16*S}px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+            <img src="${ic.url}" style="width:100%;height:100%;object-fit:contain;display:block">
+        </div>`).join('');
+    const titleHtml = `<span class="editable-text" ${editable} data-field="title" onblur="onGuestModuleTextEdit(this,gSendData,'title')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.title}</span>`;
+    const subtitleHtml = `<span class="editable-text" ${editable} data-field="subtitle" onblur="onGuestModuleTextEdit(this,gSendData,'subtitle')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.subtitle}</span>`;
+    const innerHtml = `
+        <div style="display:flex;gap:${16*S}px">
+            <div style="flex:1;height:${208*S}px;background:#F6F7FA;border-radius:${16*S}px;overflow:hidden;position:relative">
+                <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);height:${34*S}px;background:#F6F7FA;border-left:1px solid rgba(0,0,0,0.08);border-right:1px solid rgba(0,0,0,0.08);border-bottom:1px solid rgba(0,0,0,0.08);border-bottom-left-radius:${12*S}px;border-bottom-right-radius:${12*S}px;padding:${2*S}px ${12*S}px;box-sizing:border-box;font-size:${22*S}px;line-height:${30*S}px;color:rgba(0,0,0,0.60);white-space:nowrap">
                     <span class="editable-text" ${editable} data-field="leftTag" onblur="onGuestModuleTextEdit(this,gSendData,'leftTag')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.leftTag}</span>
                 </div>
-                <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin:${16*S}px 0 ${10*S}px;min-height:36px">
+                <div style="position:absolute;top:${62*S}px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:${24*S}px">
                     ${leftIconsHtml}
                 </div>
-                <div style="font-size:${22*S}px;color:#242424;font-family:PingFang SC">
+                <div style="position:absolute;top:${154*S}px;left:0;right:0;text-align:center;font-size:${22*S}px;line-height:${30*S}px;color:#242424;font-family:PingFang SC;white-space:nowrap">
                     <span class="editable-text" ${editable} data-field="leftPrizeText" onblur="onGuestModuleTextEdit(this,gSendData,'leftPrizeText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.leftPrizeText}</span>
                 </div>
             </div>
-            <div style="flex:1;background:#F6F7FA;border-radius:${16*S}px;overflow:hidden;position:relative;padding:${34*S}px ${6*S}px ${12*S}px;text-align:center">
-                <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);background:#F6F7FA;border-left:1px solid rgba(0,0,0,0.08);border-right:1px solid rgba(0,0,0,0.08);border-bottom:1px solid rgba(0,0,0,0.08);border-bottom-left-radius:${12*S}px;border-bottom-right-radius:${12*S}px;padding:${2*S}px ${12*S}px;font-size:${22*S}px;color:rgba(0,0,0,0.60)">
+            <div style="flex:1;height:${208*S}px;background:#F6F7FA;border-radius:${16*S}px;overflow:hidden;position:relative">
+                <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);height:${34*S}px;background:#F6F7FA;border-left:1px solid rgba(0,0,0,0.08);border-right:1px solid rgba(0,0,0,0.08);border-bottom:1px solid rgba(0,0,0,0.08);border-bottom-left-radius:${12*S}px;border-bottom-right-radius:${12*S}px;padding:${2*S}px ${12*S}px;box-sizing:border-box;font-size:${22*S}px;line-height:${30*S}px;color:rgba(0,0,0,0.60);white-space:nowrap">
                     <span class="editable-text" ${editable} data-field="rightTag" onblur="onGuestModuleTextEdit(this,gSendData,'rightTag')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.rightTag}</span>
                 </div>
-                <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin:${16*S}px 0 ${10*S}px;min-height:36px">
+                <div style="position:absolute;top:${62*S}px;left:50%;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:${24*S}px">
                     ${rightIconsHtml}
                 </div>
-                <div style="font-size:${22*S}px;color:#242424;font-family:PingFang SC">
+                <div style="position:absolute;top:${154*S}px;left:0;right:0;text-align:center;font-size:${22*S}px;line-height:${30*S}px;color:#242424;font-family:PingFang SC;white-space:nowrap">
                     <span class="editable-text" ${editable} data-field="rightPrizeText" onblur="onGuestModuleTextEdit(this,gSendData,'rightPrizeText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.rightPrizeText}</span>
                 </div>
             </div>
         </div>
-
-        <!-- 按钮 -->
         <div style="margin-top:${16*S}px;width:100%;height:${80*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center">
             <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="btnText" onblur="onGuestModuleTextEdit(this,gSendData,'btnText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.btnText}</span>
-        </div>
-    </div>`;
+        </div>`;
+    return renderModuleTemplate({
+        moduleId: 'g_send',
+        title: titleHtml,
+        subtitle: subtitleHtml,
+        primaryColor: pc,
+        scale: S
+    }, innerHtml);
 }
 
 // 客态 - 模块分发
@@ -9469,51 +9990,63 @@ function renderGuestPreview() {
     // 更新白色模块顶部渐变色
     document.documentElement.style.setProperty('--m-card-gradient', hexToRgba(pc, 0.20));
 
-    // 客态 头图标题（收到来自好友的红包）— Logo使用动态配置 + 代码分割线
-    const logosHtml = guestHeaderLogos.map((logo, i) => {
-        let html = `<img src="${logo.url}" style="height:24px;width:auto;max-width:100px;object-fit:contain">`;
-        if(i < guestHeaderLogos.length - 1) {
-            html += `<span style="display:inline-block;width:1px;height:12px;background:rgba(255,255,255,0.50);margin:0 6px;vertical-align:middle"></span>`;
-        }
-        return html;
-    }).join('');
+    // 客态 头图 Logo —— 与主态保持一致：复用主态 headerLogoImg 的位置/缩放，绝对定位在 375x262 头图区域内
+    const _hlImg = headerLogoImg;
+    const _hlW = _hlImg ? _hlImg.naturalWidth * _hlImg.scale : 0;
+    const logoOverlayHtml = _hlImg
+        ? `<img src="${getRenderableHeaderLogoUrl(_hlImg.url)}" style="position:absolute;left:${_hlImg.x}px;top:${_hlImg.y}px;width:${_hlW}px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));pointer-events:none;z-index:6;user-select:none;-webkit-user-drag:none">`
+        : `<img src="${getDefaultHeaderLogoUrl()}" style="position:absolute;left:12px;top:12px;width:24px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));pointer-events:none;z-index:6">`;
 
-    // 头图背景图源（用户上传的 headerBgImg 或默认图）
-    const hbgSrc = headerBgImg ? headerBgImg.url : 'assets/CodeBuddyAssets/380_168/1.png';
+    // 客态 头图底图 —— 复用主态上传的活动页头图（poster），与主态预览保持一致
+    const _hasPoster = poster && poster.processedUrl;
+    const posterHtml = _hasPoster
+        ? `<img class="poster-img" src="${poster.processedUrl}" style="position:absolute;inset:0;width:100%;height:100%;z-index:0">`
+        : `<div style="position:absolute;inset:0;background:${colors.background};z-index:0"></div>`;
+
+    // 客态 顶部标题切图（只位于头图海报上层，避免覆盖预览工具 UI）
+    // 标注来自 @2x 设计稿，页面内统一除以 2：211 / 2 = 105.5
+    const titleOverlayHtml = `<img src="assets/image/ketaibiaoti.png" style="position:absolute;top:105.5px;left:50%;transform:translateX(-50%) scale(0.5);transform-origin:top center;height:auto;pointer-events:none;z-index:5;user-select:none;-webkit-user-drag:none">`;
+
+    // 客态 头图右上角 QQ 浏览器 Logo：固定素材，位置/大小由主态"头部区域配置 > 浏览器 Logo"控制
+    if(!headerBrowserLogoImg) headerBrowserLogoImg = createDefaultHeaderBrowserLogo();
+    const _qbImg = headerBrowserLogoImg;
+    const _qbW = _qbImg.naturalWidth * _qbImg.scale;
+    const qbLogoHtml = `<img src="${_qbImg.url}" style="position:absolute;left:${_qbImg.x}px;top:${_qbImg.y}px;width:${_qbW}px;height:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));pointer-events:none;z-index:6;user-select:none;-webkit-user-drag:none">`;
 
     const headerHtml = `
     <div style="width:375px;height:262px;position:relative;background:${colors.background};overflow:hidden">
-        <!-- 底层切图 -->
-        <img src="assets/image/ketai-head.png" style="position:absolute;right:0;top:0;width:375px;height:auto;object-fit:contain;z-index:0" />
-        <!-- Logo居中 -->
-        <div style="position:absolute;top:13px;left:0;right:0;z-index:2;text-align:center">
-            <div style="display:flex;align-items:center;justify-content:center;gap:4px">
-                ${logosHtml}
-            </div>
-        </div>
+        ${posterHtml}
+        ${titleOverlayHtml}
+        <!-- 游戏 Logo（位置/缩放与主态保持一致） -->
+        ${logoOverlayHtml}
+        ${qbLogoHtml}
     </div>`;
+
+    // 模块区与头图的重叠值：与主态保持一致（有头图时上移 30px）
+    const _overlap = _hasPoster ? -30 : 0;
 
     // ---- 左侧: 页面实际样式 ----
     const c1 = document.getElementById('previewContainer');
     c1.style.background = colors.background;
+    c1.style.position = 'relative';
 
     let html1 = headerHtml;
-    html1 += `<div class="modules-wrap" style="margin-top:-137px;position:relative;z-index:1;">`;
+    html1 += `<div class="modules-wrap" style="margin-top:${_overlap}px;position:relative;z-index:1;display:flex;flex-direction:column;gap:12px">`;
     enabled.forEach(m => { html1 += renderGuestModule(m, pc, false); });
-    html1 += `<div class="preview-module-wrap" data-module-id="gFooter">` + renderGuestFooter(pc, false) + `</div>`;
-    html1 += `<div style="height:175px"></div>`;
+    html1 += renderFooterWithBottomBg(pc, false);
     html1 += `</div>`;
+    html1 += titleOverlayHtml;
     c1.innerHTML = html1;
 
     // ---- 右侧: 页面底图 ----
     const c2 = document.getElementById('previewContainerBg');
     c2.style.background = colors.background;
+    c2.style.position = 'relative';
 
     let html2 = headerHtml;
-    html2 += `<div class="modules-wrap" style="margin-top:-137px;position:relative;z-index:1;">`;
+    html2 += `<div class="modules-wrap" style="margin-top:${_overlap}px;position:relative;z-index:1;display:flex;flex-direction:column;gap:12px">`;
     enabled.forEach(m => { html2 += renderGuestModule(m, pc, true); });
-    html2 += `<div class="preview-module-wrap" data-module-id="gFooter">` + renderGuestFooter(pc, true) + `</div>`;
-    html2 += `<div style="height:175px"></div>`;
+    html2 += renderFooterWithBottomBg(pc, true);
     html2 += `</div>`;
     c2.innerHTML = html2;
 
@@ -9590,8 +10123,10 @@ function resetAll() {
     headerBgImg = null;
     headerTitleImg = null;
     headerLogoImg = null;
+    headerBrowserLogoImg = createDefaultHeaderBrowserLogo();
     moduleDecorations = {};
     bottomBg = undefined;
+    ipList = [];
     colors = { background:'#2B5B39', primary:'#63A545' };
     assistBgColor = '#065A5C';
     assistMode = 'noTask';
@@ -9726,16 +10261,16 @@ function resetAll() {
     ];
     guestModules.length = 0;
     guestModules.push(
-        { id:'g_return',    name:'🎁 回归礼包', desc:'回归玩家专属礼包卡片', enabled:true },
-        { id:'g_redpacket', name:'🧧 红包开奖', desc:'好友红包开奖互动', enabled:true },
-        { id:'g_send',      name:'💌 发红包',   desc:'免费发红包领奖励', enabled:true },
+        { id:'g_return',    name:'回归礼包', desc:'回归玩家专属礼包卡片', enabled:true },
+        { id:'g_redpacket', name:'红包开奖', desc:'好友红包开奖互动', enabled:true },
+        { id:'g_send',      name:'发红包',   desc:'免费发红包领奖励', enabled:true },
     );
-    gReturnData = { title: '你是回归玩家\n快去领专属回归礼包吧！', tag: '回归领4Q币', btnText: '去参与', prizeText: 'Q币、海量游戏道具', prizeIcons: [{url:'assets/CodeBuddyAssets/579_273/1.png'},{url:'assets/CodeBuddyAssets/579_273/2.png'},{url:'assets/CodeBuddyAssets/579_273/3.png'}] };
-    gRedpacketData = { title: '你的好友', subtitle: '送你一个游戏红包，快看看能抽中什么吧', openCountLabel: '开奖次数：', recordLabel: '查看开奖记录', btn1Text: '先助力', btn2Text: '再打开', prizeImg1: GUEST_IMG+'14.png', prizeImg2: GUEST_IMG+'15.png', lotteryImg: 'assets/image/redpot.png' };
-    gSendData = { title: '免费发红包\u00A0领奖励', subtitle: '赠人红包，手留福利！快和游戏搭子一起发起来～', leftTag: '好友可抽', rightTag: '我可以领', leftPrizeText: 'Q币、海量游戏道具', rightPrizeText: '亲密玫瑰、Q币', btnText: '我也去发一份', leftIcons: [{url:GUEST_IMG+'16.png'},{url:GUEST_IMG+'17.png'},{url:GUEST_IMG+'18.png'}], rightIcons: [{url:GUEST_IMG+'19.png'},{url:GUEST_IMG+'20.png'}] };
+    gReturnData = createDefaultGReturnData();
+    gRedpacketData = { title: '来自你的好友', subtitle: '送你一个游戏红包，快看看能抽中什么吧', step1Text: '先点击助力你的好友', step2Text: '再打开好友送你的红包', openCountLabel: '开奖次数：10', recordLabel: '查看开奖记录', btn1Text: '助力', btn2Text: '打开', prizeImg1: GUEST_IMG+'14.png', prizeImg2: GUEST_IMG+'15.png', lotteryImg: 'assets/image/hongbao.png' };
+    gSendData = { title: '免费发红包\u00A0领奖励', subtitle: '赠人红包，手留福利！快和游戏搭子一起发起来～', leftTag: '好友可抽', rightTag: '我可以抽', leftPrizeText: 'Q币、海量游戏道具', rightPrizeText: '华为手机、周边、Q币', btnText: '我也去发一份', leftIcons: [{url:'assets/CodeBuddyAssets/982_1225/4.png'},{url:'assets/CodeBuddyAssets/982_1225/5.png'},{url:'assets/CodeBuddyAssets/982_1225/6.png'}], rightIcons: [{url:'assets/CodeBuddyAssets/982_1225/9.png'},{url:'assets/CodeBuddyAssets/982_1225/8.png'},{url:'assets/CodeBuddyAssets/982_1225/7.png'}] };
     guestFooterData = { link1: '活动规则', link2: '中奖记录', link3: '意见反馈' };
     switchView('host');
-    renderPosterPreview(); _expandedModuleId = null; renderModuleList(); renderGuestModuleList(); renderGuestLogoList(); renderModuleBaseDeco(); renderBottomBgSection(); renderPreview(); updateInfo();
+    renderPosterPreview(); renderHeaderTitlePreview(); renderHeaderLogoPreview(); renderHeaderBrowserLogoPreview(); _expandedModuleId = null; renderModuleList(); renderGuestModuleList(); renderGuestLogoList(); renderModuleBaseDeco(); renderBottomBgSection(); renderIpList(); renderPreview(); updateInfo();
     pushSnapshot();
 }
 
@@ -9760,6 +10295,7 @@ function getSnapshot() {
         headerBgImg: headerBgImg ? { url: headerBgImg.url, name: headerBgImg.name } : null,
         headerTitleImg: headerTitleImg ? { url: headerTitleImg.url, name: headerTitleImg.name, naturalWidth: headerTitleImg.naturalWidth, naturalHeight: headerTitleImg.naturalHeight, x: headerTitleImg.x, y: headerTitleImg.y, scale: headerTitleImg.scale } : null,
         headerLogoImg: headerLogoImg ? { url: headerLogoImg.url, name: headerLogoImg.name, naturalWidth: headerLogoImg.naturalWidth, naturalHeight: headerLogoImg.naturalHeight, x: headerLogoImg.x, y: headerLogoImg.y, scale: headerLogoImg.scale } : null,
+        headerBrowserLogoImg: headerBrowserLogoImg ? { url: headerBrowserLogoImg.url, name: headerBrowserLogoImg.name, naturalWidth: headerBrowserLogoImg.naturalWidth, naturalHeight: headerBrowserLogoImg.naturalHeight, x: headerBrowserLogoImg.x, y: headerBrowserLogoImg.y, scale: headerBrowserLogoImg.scale } : null,
         colors: {...colors},
         assistBgColor,
         assistMode,
@@ -9793,6 +10329,7 @@ function getSnapshot() {
         footerData: {...footerData},
         moduleDecorations: JSON.parse(JSON.stringify(moduleDecorations || {})),
         bottomBg: bottomBg === undefined ? undefined : JSON.parse(JSON.stringify(bottomBg)), // {url,x,y,scale,_cleared} | undefined
+        ipList: JSON.parse(JSON.stringify(ipList || [])),
         redpacketDataMap: JSON.parse(JSON.stringify(redpacketDataMap || {})),
         signinDataMap: JSON.parse(JSON.stringify(signinDataMap || {})),
         moreDataMap: JSON.parse(JSON.stringify(moreDataMap || {})),
@@ -9805,7 +10342,7 @@ function getSnapshot() {
         guestHeaderTitle,
         guestHeaderLogos: guestHeaderLogos.map(l => ({url:l.url, name:l.name})),
         guestModules: guestModules.map(m => ({id:m.id, name:m.name, desc:m.desc, enabled:m.enabled})),
-        gReturnData: {...gReturnData, prizeIcons: gReturnData.prizeIcons.map(ic => ({...ic}))},
+        gReturnData: {...gReturnData, prizes: (gReturnData.prizes || []).map(p => ({...p})), prizeIcons: gReturnData.prizeIcons ? gReturnData.prizeIcons.map(ic => ({...ic})) : undefined},
         gRedpacketData: {...gRedpacketData},
         gSendData: {...gSendData, leftIcons: gSendData.leftIcons.map(ic => ({...ic})), rightIcons: gSendData.rightIcons.map(ic => ({...ic}))},
         guestFooterData: {...guestFooterData},
@@ -9875,6 +10412,7 @@ function restoreSnapshot(snapStr) {
     bottomBg = Object.prototype.hasOwnProperty.call(snap, 'bottomBg') && snap.bottomBg !== undefined
         ? JSON.parse(JSON.stringify(snap.bottomBg))
         : undefined;
+    ipList = Array.isArray(snap.ipList) ? JSON.parse(JSON.stringify(snap.ipList)) : [];
 
     // 恢复 redpacketDataMap（按 instanceId 隔离的口令码数据）
     redpacketDataMap = {};
@@ -10037,6 +10575,8 @@ function restoreSnapshot(snapStr) {
     renderModuleBaseDeco();
     // 重新渲染"底部区域配置"
     renderBottomBgSection();
+    // 重新渲染"IP 配置"
+    renderIpList();
 
     // 恢复 headerBgImg（头图背景）
     headerBgImg = snap.headerBgImg || null;
@@ -10048,7 +10588,12 @@ function restoreSnapshot(snapStr) {
 
     // 恢复 headerLogoImg（游戏 Logo 切图）
     headerLogoImg = snap.headerLogoImg || null;
+    refreshDefaultHeaderLogoAsset();
     renderHeaderLogoPreview();
+
+    // 恢复浏览器 Logo 配置
+    headerBrowserLogoImg = snap.headerBrowserLogoImg || createDefaultHeaderBrowserLogo();
+    renderHeaderBrowserLogoPreview();
 
     // 恢复 poster
     if(snap.poster) {
@@ -10096,23 +10641,30 @@ function restoreSnapshot(snapStr) {
     }
     if(snap.guestModules) {
         guestModules.length = 0;
-        snap.guestModules.forEach(sm => guestModules.push({id:sm.id, name:sm.name, desc:sm.desc, enabled:sm.enabled}));
+        const GUEST_NAME_BY_ID = { g_return: '回归礼包', g_redpacket: '红包开奖', g_send: '发红包' };
+        snap.guestModules.forEach(sm => guestModules.push({id:sm.id, name:GUEST_NAME_BY_ID[sm.id] || (sm.name || '').replace(/^[^\u4e00-\u9fa5A-Za-z0-9]+\s*/, ''), desc:sm.desc, enabled:sm.enabled}));
     }
     if(snap.gReturnData) {
-        Object.assign(gReturnData, snap.gReturnData);
-        if(snap.gReturnData.prizeIcons) gReturnData.prizeIcons = snap.gReturnData.prizeIcons.map(ic => ({...ic}));
-        // 兼容旧快照：补全 prizeText
-        if(!gReturnData.prizeText) gReturnData.prizeText = 'Q币、海量游戏道具';
-        // 兼容旧快照：如果只有1个图标且是旧素材，替换为新素材
-        if(gReturnData.prizeIcons && gReturnData.prizeIcons.length === 1 && gReturnData.prizeIcons[0].url.includes('11.png')) {
-            gReturnData.prizeIcons = [
-                { url: 'assets/CodeBuddyAssets/579_273/1.png' },
-                { url: 'assets/CodeBuddyAssets/579_273/2.png' },
-                { url: 'assets/CodeBuddyAssets/579_273/3.png' },
-            ];
+        gReturnData = Object.assign(createDefaultGReturnData(), snap.gReturnData);
+        if(snap.gReturnData.prizes) gReturnData.prizes = snap.gReturnData.prizes.map(p => ({...p}));
+        if(snap.gReturnData.prizeIcons && !snap.gReturnData.prizes) {
+            gReturnData.prizeIcons = snap.gReturnData.prizeIcons.map(ic => ({...ic}));
         }
+        ensureGReturnPrizes();
+    } else {
+        gReturnData = createDefaultGReturnData();
     }
-    if(snap.gRedpacketData) Object.assign(gRedpacketData, snap.gRedpacketData);
+    if(snap.gRedpacketData) {
+        Object.assign(gRedpacketData, snap.gRedpacketData);
+        if(!gRedpacketData.step1Text) gRedpacketData.step1Text = '先点击助力你的好友';
+        if(!gRedpacketData.step2Text) gRedpacketData.step2Text = '再打开好友送你的红包';
+        if(!gRedpacketData.openCountLabel || gRedpacketData.openCountLabel === '开奖次数：') gRedpacketData.openCountLabel = '开奖次数：';
+        gRedpacketData.openCountLabel = String(gRedpacketData.openCountLabel).replace(/[0-9０-９]+\s*$/, '').trim();
+        if(!gRedpacketData.btn1Text || gRedpacketData.btn1Text === '先助力') gRedpacketData.btn1Text = '助力';
+        if(!gRedpacketData.btn2Text || gRedpacketData.btn2Text === '再打开') gRedpacketData.btn2Text = '打开';
+        if(!gRedpacketData.lotteryImg || gRedpacketData.lotteryImg.includes('redpot.png')) gRedpacketData.lotteryImg = 'assets/image/hongbao.png';
+        if(gRedpacketData.title === '你的好友') gRedpacketData.title = '来自你的好友';
+    }
     if(snap.gSendData) {
         Object.assign(gSendData, snap.gSendData);
         if(snap.gSendData.leftIcons) gSendData.leftIcons = snap.gSendData.leftIcons.map(ic => ({...ic}));
