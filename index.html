@@ -10,6 +10,7 @@
     <title>游戏活动页生成工具</title>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <style>
         :root {
             /* === SaaS Dark Admin (同 shenhe tool) === */
@@ -699,11 +700,15 @@
             align-items:stretch;
             overflow:hidden;
             min-height:0;
+            height:calc(100vh - var(--header-h));
+            max-height:calc(100vh - var(--header-h));
         }
         .tool-rail {
             width:64px;
             min-width:64px;
-            height:605px;
+            height:auto;
+            align-self:flex-start;
+            max-height:calc(100vh - var(--header-h) - 32px);
             background:#1B1A1D;
             border:1px solid #363538;
             border-radius:16px;
@@ -713,6 +718,7 @@
             gap:12px;
             position:relative;
             flex-shrink:0;
+            overflow:hidden;
         }
         .tool-rail-item {
             width:48px;
@@ -739,13 +745,14 @@
         .tool-rail-guest { min-height:78px; }
         .tool-rail-shortcuts {
             position:fixed;
-            left:20px;
-            bottom:36px;
-            width:57px;
+            left:16px;
+            bottom:24px;
+            width:64px;
             display:flex;
             flex-direction:column;
-            gap:18px;
+            gap:8px;
             align-items:center;
+            z-index:99;
         }
         .tool-rail-shortcuts button {
             width:57px;
@@ -762,8 +769,8 @@
         .tool-rail-shortcuts button:hover { color:#fff; }
         .tool-rail-shortcuts small { font-size:10px; line-height:14px; }
         .panel-left {
-            width:485px !important;
-            min-width:485px !important;
+            width:var(--panel-left-width, 485px) !important;
+            min-width:var(--panel-left-width, 485px) !important;
             height:100%;
             max-height:calc(100vh - var(--header-h) - 32px);
             background:#1B1A1D;
@@ -774,6 +781,38 @@
             min-height:0;
         }
         .panel-left.collapsed { width:0 !important; min-width:0 !important; }
+        .panel-left-resize-handle {
+            position:absolute;
+            top:0;
+            right:0;
+            width:10px;
+            height:100%;
+            cursor:ew-resize;
+            z-index:20;
+            touch-action:none;
+            user-select:none;
+        }
+        .panel-left-resize-handle::after {
+            content:'';
+            position:absolute;
+            top:18px;
+            bottom:18px;
+            left:50%;
+            width:2px;
+            transform:translateX(-50%);
+            border-radius:999px;
+            background:rgba(255,255,255,0);
+            transition:background .16s ease, box-shadow .16s ease;
+        }
+        .panel-left-resize-handle:hover::after,
+        .panel-left-resize-handle.is-dragging::after {
+            background:rgba(255,255,255,0.28);
+            box-shadow:0 0 0 2px rgba(255,255,255,0.06);
+        }
+        body.panel-resizing {
+            cursor:ew-resize;
+            user-select:none;
+        }
         .panel-left-toggle,
         .panel-left-toggle-float { display:none !important; }
         .panel-left .view-tab-bar { display:none; }
@@ -827,6 +866,47 @@
             font-size:14px;
         }
         .panel-left.tool-single-mode #guestPanel .section-collapse-btn { display:none; }
+
+        /* 客态面板：复用主态 tool-active-section 的紧凑样式 */
+        .panel-left.tool-single-mode #guestPanel .modules-section-list {
+            gap:12px;
+        }
+        .panel-left.tool-single-mode #guestPanel .module-section {
+            padding:14px 16px;
+            border-radius:12px;
+        }
+        .panel-left.tool-single-mode #guestPanel .module-section-header {
+            gap:10px;
+            font-size:13px;
+        }
+        .panel-left.tool-single-mode #guestPanel .module-section-header input[type="checkbox"] {
+            width:18px;
+            height:18px;
+        }
+        .panel-left.tool-single-mode #guestPanel .module-detail-body {
+            margin-top:14px;
+            padding-top:14px;
+        }
+        .panel-left.tool-single-mode #guestPanel .module-detail-body .detail-sub-section {
+            margin-bottom:18px;
+        }
+        .panel-left.tool-single-mode #guestPanel .module-detail-body .detail-sub-title {
+            font-size:13px;
+            margin-bottom:10px;
+        }
+        .panel-left.tool-single-mode #guestPanel .module-count {
+            font-size:12px;
+            padding:2px 8px;
+        }
+        .panel-left.tool-single-mode #guestPanel .module-actions {
+            gap:10px;
+            margin-bottom:14px;
+        }
+        .panel-left.tool-single-mode #guestPanel .btn-sm {
+            min-height:30px;
+            padding:5px 10px;
+            font-size:12px;
+        }
         .panel-left #sectionSlice .section-body {
             display:flex;
             flex-direction:column;
@@ -859,6 +939,41 @@
         .panel-left .prop-input,
         .panel-left input[type="text"],
         .panel-left input[type="number"] { background:transparent; border-color:#363538; }
+        .panel-left button[onclick^="removeLastRedpacketIcon"] {
+            display:none !important;
+        }
+        .panel-left .redpacket-icon-section {
+            margin-bottom:0 !important;
+            padding-bottom:0 !important;
+        }
+        .panel-left .redpacket-icon-section .icon-upload-grid {
+            margin-bottom:0 !important;
+        }
+        .panel-left .redpacket-count-input {
+            width:56px !important;
+            height:34px !important;
+            padding:0 10px !important;
+            border-radius:10px !important;
+            background:transparent !important;
+            border:1px solid #3A3A42 !important;
+            color:#F5F6FA !important;
+            font-size:14px !important;
+            font-weight:500;
+            text-align:center;
+            box-shadow:none !important;
+            outline:none !important;
+            appearance:textfield;
+            -moz-appearance:textfield;
+        }
+        .panel-left .redpacket-count-input:focus {
+            border-color:rgba(79,124,255,0.75) !important;
+            box-shadow:0 0 0 3px rgba(79,124,255,0.18) !important;
+        }
+        .panel-left .redpacket-count-input::-webkit-outer-spin-button,
+        .panel-left .redpacket-count-input::-webkit-inner-spin-button {
+            -webkit-appearance:none;
+            margin:0;
+        }
 
         /* Active tool content: larger, balanced, no nested outer frame */
         .panel-left.tool-single-mode .tool-active-section .section-body {
@@ -1142,6 +1257,32 @@
         .panel-left.tool-single-mode .tool-active-section input[type="number"] {
             -moz-appearance:textfield;
         }
+        .panel-left.tool-single-mode .tool-active-section input.redpacket-count-input[type="number"] {
+            width:56px !important;
+            height:34px !important;
+            padding:0 10px !important;
+            border-radius:10px !important;
+            background:transparent !important;
+            border:1px solid #3A3A42 !important;
+            color:#F5F6FA !important;
+            font-size:14px !important;
+            font-weight:500 !important;
+            text-align:center !important;
+            box-shadow:none !important;
+            outline:none !important;
+            appearance:none !important;
+            -webkit-appearance:none !important;
+            -moz-appearance:textfield !important;
+        }
+        .panel-left.tool-single-mode .tool-active-section input.redpacket-count-input[type="number"]:focus {
+            border-color:rgba(79,124,255,0.75) !important;
+            box-shadow:0 0 0 3px rgba(79,124,255,0.18) !important;
+        }
+        .panel-left.tool-single-mode .tool-active-section input.redpacket-count-input[type="number"]::-webkit-outer-spin-button,
+        .panel-left.tool-single-mode .tool-active-section input.redpacket-count-input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance:none !important;
+            margin:0 !important;
+        }
         .panel-center {
             padding:0 0 120px;
             background:#141316;
@@ -1269,7 +1410,9 @@
         }
         .preview-container img.poster-img { display:block; width:100%; }
         .main .panel-center {
-            padding:0 0 120px;
+            /* 预览区本身是滚动容器。这里必须保留顶部安全距离，
+               否则 sticky 的预览标题会贴到容器顶边，看起来像被顶部 UI 裁切。 */
+            padding:16px 0 120px;
             background:#141316;
             justify-content:center;
             min-width:0;
@@ -1306,7 +1449,7 @@
             border-radius:16px;
             box-shadow:none;
             position:sticky;
-            top:0;
+            top:16px;
             z-index:10;
             font-size:14px;
             font-weight:400;
@@ -1486,7 +1629,10 @@
         }
         .m-card-dark.m-card-dark-full {
             height: auto;
-            padding-bottom: 12px;
+            padding: 16px 0;
+        }
+        .m-card-dark.m-card-dark-full .m-card-header {
+            padding-top: 0;
         }
         .m-card-dark .m-card-header {
             text-align: center;
@@ -2698,7 +2844,7 @@
         }
         .slice-item-preview img {
             max-width:100%; max-height:80px;
-            border-radius:4px;
+            border-radius:0;
         }
         .slice-item-info {
             padding:6px 10px;
@@ -3209,6 +3355,77 @@
             opacity:1;
         }
 
+
+
+        /* ===== Responsive hardening: keep controls visible while resizing/zooming ===== */
+        /* 顶部导航栏保持原始固定布局，不做自适应位移 */
+
+        .tool-rail {
+            height:auto;
+            align-self:flex-start;
+            max-height:calc(100vh - var(--header-h) - 32px);
+            overflow:hidden;
+        }
+        .tool-rail-shortcuts {
+            position:fixed !important;
+            left:16px !important;
+            bottom:24px !important;
+            top:auto !important;
+            right:auto !important;
+            margin:0 !important;
+            width:64px !important;
+            height:auto !important;
+            display:flex !important;
+            flex-direction:column !important;
+            gap:8px !important;
+            align-items:center !important;
+            z-index:9999 !important;
+            background:transparent !important;
+            pointer-events:auto !important;
+        }
+        .tool-rail-shortcuts button { width:57px; flex:0 0 auto; }
+
+        .panel-left {
+            width:var(--panel-left-width, clamp(340px, 30vw, 485px)) !important;
+            min-width:var(--panel-left-width, clamp(340px, 30vw, 485px)) !important;
+        }
+        .main .preview-dual { gap:clamp(24px, 5vw, 80px); }
+        .main .panel-center::before { left:clamp(440px, 33vw, 611px); }
+
+        @media (max-width: 1380px) {
+            .panel-left {
+                width:var(--panel-left-width, clamp(320px, 32vw, 420px)) !important;
+                min-width:var(--panel-left-width, clamp(320px, 32vw, 420px)) !important;
+            }
+        }
+
+        @media (max-width: 1100px) {
+            .main { gap:12px; padding:12px; }
+            .tool-rail { width:56px; min-width:56px; padding:6px; border-radius:14px; }
+            .tool-rail-item { width:42px; min-height:54px; padding:6px 0 5px; }
+            .tool-rail-item img { width:21px; height:21px; }
+            .tool-rail-item span { font-size:11px; line-height:14px; }
+            .panel-left {
+                width:var(--panel-left-width, 320px) !important;
+                min-width:var(--panel-left-width, 320px) !important;
+            }
+            .panel-left-body { padding:16px !important; }
+        }
+
+        @media (max-height: 760px) {
+            .tool-rail { gap:6px; padding-top:6px; padding-bottom:6px; }
+            .tool-rail-item { min-height:50px; padding:5px 0 4px; }
+            .tool-rail-guest { min-height:58px; }
+            .tool-rail-shortcuts { gap:8px; }
+            .tool-rail-shortcuts small { display:none; }
+        }
+
+        @media (max-height: 620px) {
+            .tool-rail-shortcuts { display:flex; }
+        }
+
+
+
         /* Scrollbar */
         ::-webkit-scrollbar { width:6px; height:6px; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -3379,17 +3596,18 @@
         <button class="tool-rail-item" data-tool="ip" onclick="activateToolNav('ip')"><img src="assets/CodeBuddyAssets/1019_16019/7.svg" alt=""><span>IP</span></button>
         <button class="tool-rail-item" data-tool="slice" onclick="activateToolNav('slice')"><img src="assets/CodeBuddyAssets/1019_16019/8.svg" alt=""><span>切图</span></button>
         <button class="tool-rail-item tool-rail-guest" data-tool="guest" onclick="activateToolNav('guest')"><img src="assets/CodeBuddyAssets/1019_16019/9.svg" alt=""><span id="guestToggleLabel">切换<br>客态</span></button>
-        <div class="tool-rail-shortcuts">
-            <button onclick="undo()" title="撤回 command+z">撤回<br><small>command+z</small></button>
-            <button onclick="redo()" title="重做 command+shift+z">重做<br><small>command<br>+shift+z</small></button>
-            <button onclick="saveCurrentProject()" title="保存 command+s">保存<br><small>command+s</small></button>
-        </div>
     </nav>
+    <div class="tool-rail-shortcuts">
+        <button onclick="undo()" title="撤回 command+z">撤回<br><small>command+z</small></button>
+        <button onclick="redo()" title="重做 command+shift+z">重做<br><small>command<br>+shift+z</small></button>
+        <button onclick="saveCurrentProject()" title="保存 command+s">保存<br><small>command+s</small></button>
+    </div>
     <!-- Left Config Panel -->
     <aside class="panel-left tool-single-mode" id="panelLeft">
         <button class="panel-left-toggle" id="panelLeftToggle" onclick="togglePanelLeft()" title="收起侧边栏">
             <svg width="10" height="14" viewBox="0 0 10 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 1 1 7 7 13"/></svg>
         </button>
+        <div class="panel-left-resize-handle" id="panelLeftResizeHandle" title="拖拽调整操作区宽度"></div>
         <!-- 主态/客态切换 Tab -->
         <div class="view-tab-bar" id="viewTabBar">
             <button class="view-tab active" data-view="host" onclick="switchView('host')">主态</button>
@@ -3989,6 +4207,44 @@ function _currentCustomInstanceId() {
         if(m) return m.instanceId;
     }
     const m0 = modules.find(mm => mm.id === 'custom');
+    return m0 ? m0.instanceId : null;
+}
+
+// ===== 通行证（pass）：功能同自由定制组件，固定切图高度 492 @2x =====
+const PASS_IMAGE_HEIGHT = 492;
+const PASS_DEFAULT_IMG = 'assets/image/jifenduijiang.png';
+const PASS_TASK_IMAGE_HEIGHT = 738;
+const PASS_TASK_DEFAULT_IMG = 'assets/image/jifenduijiangdairenwu.png';
+const PASS_DATA_TEMPLATE = {
+    mode: 'noTask', // 'noTask' | 'withTask'
+    title: '通行证',
+    subtitle: '完成任务升级通行证，解锁更多奖励',
+    img: PASS_DEFAULT_IMG,
+    taskImg: PASS_TASK_DEFAULT_IMG,
+};
+let passDataMap = {};
+function normalizePassData(d) {
+    if(!d) return d;
+    if(!d.mode) d.mode = 'noTask';
+    if(!d.img) d.img = PASS_DEFAULT_IMG;
+    if(!d.taskImg) d.taskImg = PASS_TASK_DEFAULT_IMG;
+    if(!d.title) d.title = '通行证';
+    if(d.subtitle == null) d.subtitle = '完成任务升级通行证，解锁更多奖励';
+    return d;
+}
+function getPassData(instanceId) {
+    if(!instanceId) return null;
+    if(!passDataMap[instanceId]) {
+        passDataMap[instanceId] = JSON.parse(JSON.stringify(PASS_DATA_TEMPLATE));
+    }
+    return normalizePassData(passDataMap[instanceId]);
+}
+function _currentPassInstanceId() {
+    if(_expandedModuleId) {
+        const m = modules.find(mm => mm.instanceId === _expandedModuleId && mm.id === 'pass');
+        if(m) return m.instanceId;
+    }
+    const m0 = modules.find(mm => mm.id === 'pass');
     return m0 ? m0.instanceId : null;
 }
 
@@ -4629,9 +4885,10 @@ function renderModuleTemplate(opts, innerHtml) {
     //         圆角 24*S，白底
     const card = `margin:0 ${12}px;border-radius:${24*S}px;background:#fff;position:relative;overflow:hidden`;
     // 内容可用区域的左右 padding 24*S，上 padding 36*S（因为装饰底纹是 absolute 铺满，不影响）
-    const bodyPad = `padding:${36*S}px ${24*S}px ${24*S}px`;
+    const bodyPad = opts.bodyPad || `padding:${36*S}px ${24*S}px ${24*S}px`;
 
-    const subtitleHtml = opts.subtitle ? `
+    const hideHeader = !!opts.hideHeader;
+    const subtitleHtml = (!hideHeader && opts.subtitle) ? `
         <div style="text-align:center;margin-top:${12*S}px;font-size:${20*S}px;line-height:1.4;color:rgba(0,0,0,0.60);font-family:PingFang SC,sans-serif">
             ${opts.subtitle}
         </div>` : '';
@@ -4668,6 +4925,7 @@ function renderModuleTemplate(opts, innerHtml) {
         </div>
         <!-- 内容区 -->
         <div class="m-tpl-body" style="position:relative;${bodyPad}">
+            ${hideHeader ? '' : `
             <div class="m-tpl-title" style="display:flex;align-items:center;justify-content:center;gap:${8*S}px">
                 ${titleDeco ? `<span style="${titleDecoWrapStyle}"><img src="${titleDeco}" style="max-width:${titleDeco === DEFAULT_MODULE_DECO.titleDeco ? '35px' : '70px'};max-height:${titleDeco === DEFAULT_MODULE_DECO.titleDeco ? '12px' : '24px'};width:auto;height:auto;object-fit:contain;display:block" onerror="this.style.display='none'"></span>` : ''}
                 <div style="font-size:${28*S}px;font-weight:600;line-height:1;color:#242424;font-family:PingFang SC,sans-serif;text-align:center">
@@ -4675,8 +4933,8 @@ function renderModuleTemplate(opts, innerHtml) {
                 </div>
                 ${titleDeco ? `<span style="${titleDecoWrapStyle}"><img src="${titleDeco}" style="max-width:${titleDeco === DEFAULT_MODULE_DECO.titleDeco ? '35px' : '70px'};max-height:${titleDeco === DEFAULT_MODULE_DECO.titleDeco ? '12px' : '24px'};width:auto;height:auto;object-fit:contain;display:block;transform:scaleX(-1)" onerror="this.style.display='none'"></span>` : ''}
             </div>
-            ${subtitleHtml}
-            <div class="m-tpl-content" style="margin-top:${24*S}px">
+            ${subtitleHtml}`}
+            <div class="m-tpl-content" style="margin-top:${hideHeader ? 0 : 24*S}px">
                 ${innerHtml}
             </div>
         </div>
@@ -4836,6 +5094,7 @@ let modules = [
     { instanceId: genInstanceId(), id:'content',   name:'内容组件', desc:'多张图片，可选小标题', enabled:true },
     { instanceId: genInstanceId(), id:'custom',    name:'自由定制组件', desc:'上传一张图片，宽度自适应铺满', enabled:true },
     { instanceId: genInstanceId(), id:'more',      name:'更多福利内容', desc:'多栏福利展示，可配置图标和名称', enabled:true },
+    { instanceId: genInstanceId(), id:'pass',      name:'通行证', desc:'上传一张切图，固定高度 492px', enabled:true },
 ];
 
 // 充值返利模块数据
@@ -5248,35 +5507,57 @@ function onGReturnPrizeEdit(el, idx) {
 }
 
 // ===== 客态 - 发红包图标配置 =====
-const G_SEND_MAX_ICONS = 3; // 发红包模块每侧最多3个图标
+const G_SEND_MAX_ICONS = 12; // 发红包模块每侧最多 12 个图标（对齐口令码）
 
 function renderGSendIconConfig() {
     const leftIcons = gSendData.leftIcons || [];
     const rightIcons = gSendData.rightIcons || [];
-    const renderSide = (side, label, icons) => {
-        const atMax = icons.length >= G_SEND_MAX_ICONS;
-        return `
-            <div class="icon-group-label">${label}</div>
-            <div class="icon-upload-grid">
-                ${icons.map((ic, idx) => `
-                    <div class="icon-upload-item" style="position:relative">
-                        ${icons.length > 1 ? `<button class="reward-delete" onclick="event.stopPropagation();removeGSendIcon('${side}',${idx})" title="删除" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2">✕</button>` : ''}
-                        <img src="${ic.url}" onclick="uploadGSendIcon('${side}',${idx})" title="点击替换图标" style="cursor:pointer">
-                    </div>
-                `).join('')}
-            </div>
-            <div style="display:flex;gap:8px;margin-top:10px">
-                ${atMax ? '' : `<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="addGSendIcon('${side}')">＋ 添加图标</button>`}
-                ${icons.length > 1 ? `<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;color:var(--danger);border-color:rgba(248,113,113,0.35)" onclick="removeLastGSendIcon('${side}')">－ 删除末尾</button>` : ''}
-            </div>`;
-    };
+    const renderGrid = icons => icons.map(ic => `
+        <div class="icon-upload-item">
+            <img src="${ic.url}" style="cursor:pointer">
+        </div>
+    `).join('');
     return `
-    <div style="padding:8px 0 4px">
-        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">配置能力复用主态「口令码」：左右奖池图标可上传、添加、删除；模块文案可在预览区直接编辑</div>
-        ${renderSide('left', '奖池1', leftIcons)}
-        <div style="height:12px"></div>
-        ${renderSide('right', '奖池2', rightIcons)}
+    <div class="detail-sub-section redpacket-icon-section">
+        <div class="detail-sub-title">图标管理</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">先调整每个奖池的图标数量，再点击图标上传替换；模块文案可在预览区直接编辑</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+            <div>
+                <div class="icon-group-label">奖池1 · 图标数量</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                    <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setGSendIconCount('left', gSendData.leftIcons.length - 1)">－</button>
+                    <input type="number" class="prop-input redpacket-count-input" min="1" max="${G_SEND_MAX_ICONS}" value="${leftIcons.length}" onchange="setGSendIconCount('left', +this.value)">
+                    <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setGSendIconCount('left', gSendData.leftIcons.length + 1)">＋</button>
+                    <span style="font-size:11px;color:var(--text-4)">/ 最多 ${G_SEND_MAX_ICONS}</span>
+                </div>
+                <div class="icon-upload-grid">
+                    ${leftIcons.map((ic, idx) => `<div class="icon-upload-item"><img src="${ic.url}" onclick="uploadGSendIcon('left',${idx})" title="点击替换图标" style="cursor:pointer"></div>`).join('')}
+                </div>
+            </div>
+            <div>
+                <div class="icon-group-label">奖池2 · 图标数量</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                    <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setGSendIconCount('right', gSendData.rightIcons.length - 1)">－</button>
+                    <input type="number" class="prop-input redpacket-count-input" min="1" max="${G_SEND_MAX_ICONS}" value="${rightIcons.length}" onchange="setGSendIconCount('right', +this.value)">
+                    <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setGSendIconCount('right', gSendData.rightIcons.length + 1)">＋</button>
+                    <span style="font-size:11px;color:var(--text-4)">/ 最多 ${G_SEND_MAX_ICONS}</span>
+                </div>
+                <div class="icon-upload-grid">
+                    ${rightIcons.map((ic, idx) => `<div class="icon-upload-item"><img src="${ic.url}" onclick="uploadGSendIcon('right',${idx})" title="点击替换图标" style="cursor:pointer"></div>`).join('')}
+                </div>
+            </div>
+        </div>
     </div>`;
+}
+
+function setGSendIconCount(side, target) {
+    const icons = side === 'left' ? gSendData.leftIcons : gSendData.rightIcons;
+    const t = Math.max(1, Math.min(G_SEND_MAX_ICONS, Number(target) || 1));
+    while(icons.length > t) icons.pop();
+    while(icons.length < t) icons.push({ url: 'assets/image/morenjinbi.png' });
+    renderGuestModuleList();
+    renderPreview();
+    pushSnapshot();
 }
 
 function addGSendIcon(side) {
@@ -6137,6 +6418,7 @@ function resetAllSilent() {
     const initialLotteryIid = genInstanceId();
     const initialContentIid = genInstanceId();
     const initialCustomIid = genInstanceId();
+    const initialPassIid = genInstanceId();
     modules.push(
         { instanceId: initialIid, id:'redpacket', name:'口令码', desc:'口令码分享/好友助力/奖品展示', enabled:true },
         { instanceId: initialSigninIid, id:'signin', name:'签到', desc:'连续签到领好礼，可选带抽奖', enabled:true },
@@ -6144,6 +6426,7 @@ function resetAllSilent() {
         { instanceId: initialContentIid, id:'content', name:'内容组件', desc:'多张图片，可选小标题', enabled:true },
         { instanceId: initialCustomIid, id:'custom',  name:'自由定制组件', desc:'上传一张图片，宽度自适应铺满', enabled:true },
         { instanceId: initialMoreIid, id:'more',   name:'更多福利内容', desc:'多栏福利展示，可配置图标和名称', enabled:true },
+        { instanceId: initialPassIid, id:'pass',  name:'通行证', desc:'上传一张切图，固定高度 492px', enabled:true },
     );
     rechargeData = { title: '充值返利', subtitle: '这里是一句文案我也不知道写啥', bgColor: '#065A5C' };
     // 重置实例数据：清空 map，按当前模块表为每个口令码实例创建一份模板数据
@@ -6159,6 +6442,8 @@ function resetAllSilent() {
     contentDataMap[initialContentIid] = JSON.parse(JSON.stringify(CONTENT_DATA_TEMPLATE));
     customDataMap = {};
     customDataMap[initialCustomIid] = JSON.parse(JSON.stringify(CUSTOM_DATA_TEMPLATE));
+    passDataMap = {};
+    passDataMap[initialPassIid] = JSON.parse(JSON.stringify(PASS_DATA_TEMPLATE));
     roleData = { selectText: '点击选择角色' };
     assistData = { title: '攒好友助力兑奖品', subtitle: 'Q币每12小时补货一次，补完即止', taskTitle: '领积分，兑奖品', tasks: [
         { text: '每日登录本活动页面', reward: '+10积分', btnText: '立即领取' },
@@ -6249,6 +6534,7 @@ function resetAllSilent() {
 
 // ===== Init =====
 function init() {
+    initPanelLeftResize();
     // 同步 UI 控件值
     document.getElementById('colorBg').value = colors.background;
     document.getElementById('colorBgHex').value = colors.background;
@@ -6289,6 +6575,12 @@ function init() {
     renderBottomBgSection();
     renderIpList();
     renderPreview();
+    // 首次进入 / 重新初始化时，强制预览滚动区回到顶部，避免浏览器恢复上次滚动位置后
+    // sticky 标题贴边，造成顶部 UI 像被裁切的错觉。
+    requestAnimationFrame(() => {
+        const center = document.querySelector('.panel-center');
+        if(center) center.scrollTop = 0;
+    });
     updateInfo();
     // 兜底加载默认头部素材，避免新版左侧切换面板时出现默认头图/标题/Logo 未初始化
     if(!poster || !poster.originalUrl || !poster.processedUrl || !headerTitleImg || !headerLogoImg) {
@@ -6296,6 +6588,88 @@ function init() {
     }
     // 推入初始快照
     pushSnapshot();
+}
+
+// ===== 操作区宽度拖拽 =====
+const PANEL_LEFT_DEFAULT_WIDTH = 485;
+const PANEL_LEFT_MIN_WIDTH = 320;
+const PANEL_LEFT_MAX_WIDTH = 900;
+let panelLeftResizeInited = false;
+
+function getPanelLeftDefaultWidth() {
+    const vw = window.innerWidth || 1440;
+    if(vw <= 1100) return 320;
+    if(vw <= 1380) return Math.max(320, Math.min(vw * 0.32, 420));
+    return Math.max(340, Math.min(vw * 0.30, PANEL_LEFT_DEFAULT_WIDTH));
+}
+
+function getPanelLeftMaxWidth() {
+    // 保留预览区和导航栏的基本可用空间，避免操作区被拖得过宽导致页面不可用
+    const viewportMax = Math.max(PANEL_LEFT_MIN_WIDTH, window.innerWidth - 220);
+    return Math.min(PANEL_LEFT_MAX_WIDTH, viewportMax);
+}
+
+function setPanelLeftWidth(width) {
+    const nextWidth = Math.round(Math.max(PANEL_LEFT_MIN_WIDTH, Math.min(width, getPanelLeftMaxWidth())));
+    document.documentElement.style.setProperty('--panel-left-width', nextWidth + 'px');
+}
+
+function initPanelLeftResize() {
+    if(panelLeftResizeInited) return;
+    const panel = document.getElementById('panelLeft');
+    const handle = document.getElementById('panelLeftResizeHandle');
+    if(!panel || !handle) return;
+
+    panelLeftResizeInited = true;
+    setPanelLeftWidth(getPanelLeftDefaultWidth());
+
+    let startX = 0;
+    let startWidth = getPanelLeftDefaultWidth();
+    let isResizing = false;
+
+    const stopResize = () => {
+        isResizing = false;
+        handle.classList.remove('is-dragging');
+        document.body.classList.remove('panel-resizing');
+        window.removeEventListener('mousemove', onResize);
+        window.removeEventListener('mouseup', stopResize);
+        window.removeEventListener('pointermove', onResize);
+        window.removeEventListener('pointerup', stopResize);
+        window.removeEventListener('pointercancel', stopResize);
+    };
+
+    var onResize = (event) => {
+        setPanelLeftWidth(startWidth + event.clientX - startX);
+    };
+
+    const startResize = (event) => {
+        if(panel.classList.contains('collapsed')) return;
+        if(isResizing) return;
+        if(event.type === 'mousedown' && event.button !== 0) return;
+        event.preventDefault();
+        isResizing = true;
+        startX = event.clientX;
+        startWidth = panel.getBoundingClientRect().width || getPanelLeftDefaultWidth();
+        handle.classList.add('is-dragging');
+        document.body.classList.add('panel-resizing');
+        if(event.type === 'pointerdown') {
+            try { handle.setPointerCapture(event.pointerId); } catch(_) {}
+            window.addEventListener('pointermove', onResize);
+            window.addEventListener('pointerup', stopResize);
+            window.addEventListener('pointercancel', stopResize);
+        } else {
+            window.addEventListener('mousemove', onResize);
+            window.addEventListener('mouseup', stopResize);
+        }
+    };
+
+    handle.addEventListener('pointerdown', startResize);
+    handle.addEventListener('mousedown', startResize);
+
+    window.addEventListener('resize', () => {
+        const currentWidth = panel.getBoundingClientRect().width || getPanelLeftDefaultWidth();
+        setPanelLeftWidth(currentWidth);
+    });
 }
 
 /**
@@ -7572,17 +7946,39 @@ function getModuleDetailHtml(key) {
     const m = modules.find(mm => mm.instanceId === key);
     if(!m) return '';
     switch(m.id) {
-        case 'redpacket': return `
-            <div class="detail-sub-section">
+        case 'redpacket': {
+            const _rd = getRedpacketData(key) || { leftIcons: [], rightIcons: [] };
+            normalizeRedpacketIconCount(_rd);
+            const _lc = (_rd.leftIcons || []).length;
+            const _rc = (_rd.rightIcons || []).length;
+            return `
+            <div class="detail-sub-section redpacket-icon-section">
                 <div class="detail-sub-title">图标管理</div>
-                <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">点击图标可上传替换，所有模块文字均可直接在画布中编辑</div>
-                <div class="icon-group-label">奖池1</div>
-                <div class="icon-upload-grid" id="leftIconGrid_${key}"></div>
-                <div id="leftIconBtns_${key}"></div>
-                <div class="icon-group-label">奖池2</div>
-                <div class="icon-upload-grid" id="rightIconGrid_${key}"></div>
-                <div id="rightIconBtns_${key}"></div>
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">先调整每个奖池的图标数量，再点击图标上传替换；所有模块文字均可直接在画布中编辑</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+                    <div>
+                        <div class="icon-group-label">奖池1 · 图标数量</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                            <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setRedpacketIconCount('${key}','left', getRedpacketData('${key}').leftIcons.length - 1)">－</button>
+                            <input type="number" class="prop-input redpacket-count-input" min="1" max="${REDPACKET_MAX_ICONS}" value="${Math.min(_lc, REDPACKET_MAX_ICONS)}" onchange="setRedpacketIconCount('${key}','left', +this.value)">
+                            <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setRedpacketIconCount('${key}','left', getRedpacketData('${key}').leftIcons.length + 1)">＋</button>
+                            <span style="font-size:11px;color:var(--text-4)">/ 最多 ${REDPACKET_MAX_ICONS}</span>
+                        </div>
+                        <div class="icon-upload-grid" id="leftIconGrid_${key}"></div>
+                    </div>
+                    <div>
+                        <div class="icon-group-label">奖池2 · 图标数量</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                            <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setRedpacketIconCount('${key}','right', getRedpacketData('${key}').rightIcons.length - 1)">－</button>
+                            <input type="number" class="prop-input redpacket-count-input" min="1" max="${REDPACKET_MAX_ICONS}" value="${Math.min(_rc, REDPACKET_MAX_ICONS)}" onchange="setRedpacketIconCount('${key}','right', +this.value)">
+                            <button class="btn btn-outline btn-sm" style="width:28px;height:28px;padding:0;justify-content:center" onclick="setRedpacketIconCount('${key}','right', getRedpacketData('${key}').rightIcons.length + 1)">＋</button>
+                            <span style="font-size:11px;color:var(--text-4)">/ 最多 ${REDPACKET_MAX_ICONS}</span>
+                        </div>
+                        <div class="icon-upload-grid" id="rightIconGrid_${key}"></div>
+                    </div>
+                </div>
             </div>`;
+        }
         case 'assist': return `
             <div class="detail-sub-section">
                 <div class="detail-sub-title">通行证类型</div>
@@ -7693,6 +8089,27 @@ function getModuleDetailHtml(key) {
                 <div class="detail-sub-title">图片管理</div>
                 <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">上传任意尺寸图片，会等比缩放至宽度 654px @2x。标题/副标题可在预览区直接编辑</div>
                 <div id="customImageSlot_${key}"></div>
+            </div>`;
+        }
+        case 'pass': {
+            const d = getPassData(key);
+            const withTask = d.mode === 'withTask';
+            return `
+            <div class="detail-sub-section">
+                <div class="detail-sub-title">通行证类型</div>
+                <div style="display:flex;gap:8px;margin-bottom:12px">
+                    <label style="flex:1;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;border:1.5px solid ${!withTask?'var(--primary)':'var(--border)'};cursor:pointer;font-size:12px;color:var(--text-1);background:${!withTask?'rgba(0,0,0,0.06)':'transparent'}" onclick="updatePassMode('${key}','noTask')">
+                        <input type="radio" name="passMode_${key}" value="noTask" ${!withTask?'checked':''} style="accent-color:var(--primary)"> 不带任务
+                    </label>
+                    <label style="flex:1;display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;border:1.5px solid ${withTask?'var(--primary)':'var(--border)'};cursor:pointer;font-size:12px;color:var(--text-1);background:${withTask?'rgba(0,0,0,0.06)':'transparent'}" onclick="updatePassMode('${key}','withTask')">
+                        <input type="radio" name="passMode_${key}" value="withTask" ${withTask?'checked':''} style="accent-color:var(--primary)"> 带任务
+                    </label>
+                </div>
+            </div>
+            <div class="detail-sub-section">
+                <div class="detail-sub-title">图片管理</div>
+                <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">${withTask ? '带任务状态默认使用 jifenduijiangdairenwu.png，模块高度 802px @2x，不显示标题和副标题' : '不带任务状态默认使用 jifenduijiang.png，按原比例缩放至宽度 702px @2x'}</div>
+                <div id="passImageSlot_${key}"></div>
             </div>`;
         }
         case 'lottery': {
@@ -7821,6 +8238,9 @@ function _rerenderModuleDetail(key) {
         case 'custom':
             renderCustomImageSlot(key);
             break;
+        case 'pass':
+            renderPassImageSlot(key);
+            break;
         case 'benefits':
             renderBenefitIconPanel();
             break;
@@ -7929,6 +8349,12 @@ function duplicateModule(i) {
             customDataMap[newId] = JSON.parse(JSON.stringify(srcData));
         }
     }
+    if(src.id === 'pass') {
+        const srcData = getPassData(src.instanceId);
+        if(srcData) {
+            passDataMap[newId] = JSON.parse(JSON.stringify(srcData));
+        }
+    }
     if(moduleDecorations[src.instanceId]) {
         moduleDecorations[newId] = JSON.parse(JSON.stringify(moduleDecorations[src.instanceId]));
     }
@@ -7957,6 +8383,7 @@ function removeModule(i) {
     delete lotteryDataMap[target.instanceId];
     delete contentDataMap[target.instanceId];
     delete customDataMap[target.instanceId];
+    delete passDataMap[target.instanceId];
     delete moduleDecorations[target.instanceId];
     // 如果删的是当前展开的详情，折叠一下
     if(_expandedModuleId === target.instanceId) _expandedModuleId = null;
@@ -8096,34 +8523,34 @@ function renderRedpacketIconGrid() {
     const iid = _currentRedpacketInstanceId();
     if(!iid) return;
     const d = getRedpacketData(iid);
-    _renderRedpacketSide('left', `leftIconGrid_${iid}`, `leftIconBtns_${iid}`, d.leftIcons);
-    _renderRedpacketSide('right', `rightIconGrid_${iid}`, `rightIconBtns_${iid}`, d.rightIcons);
+    normalizeRedpacketIconCount(d);
+    _renderRedpacketSide('left', `leftIconGrid_${iid}`, d.leftIcons);
+    _renderRedpacketSide('right', `rightIconGrid_${iid}`, d.rightIcons);
+    [`leftIconBtns_${iid}`, `rightIconBtns_${iid}`].forEach(id => {
+        const legacyBtnWrap = document.getElementById(id);
+        if(legacyBtnWrap) legacyBtnWrap.remove();
+    });
 }
 
 const REDPACKET_MAX_ICONS = 3;
 
-function _renderRedpacketSide(side, gridId, btnId, icons) {
+function normalizeRedpacketIconCount(d) {
+    if(!d) return;
+    ['leftIcons', 'rightIcons'].forEach(key => {
+        if(!Array.isArray(d[key])) d[key] = [];
+        while(d[key].length < 1) d[key].push({ url: 'assets/image/morenjinbi.png', id: key[0] + 'icon' + d[key].length });
+        if(d[key].length > REDPACKET_MAX_ICONS) d[key] = d[key].slice(0, REDPACKET_MAX_ICONS);
+    });
+}
+
+function _renderRedpacketSide(side, gridId, icons) {
     const grid = document.getElementById(gridId);
     if(!grid) return;
     grid.innerHTML = icons.map((ic, i) => `
-        <div class="icon-upload-item" style="position:relative">
-            ${icons.length > 1 ? `<button class="reward-delete" onclick="event.stopPropagation();removeRedpacketIcon('${side}',${i})" title="删除" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--danger);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:2">✕</button>` : ''}
+        <div class="icon-upload-item">
             <img src="${ic.url}" onclick="triggerIconUpload('${side}',${i})" title="点击替换图标" style="cursor:pointer">
         </div>
     `).join('');
-    // hover显示删除按钮
-    grid.querySelectorAll('.icon-upload-item').forEach(item => {
-        item.addEventListener('mouseenter', () => { const btn = item.querySelector('.reward-delete'); if(btn) btn.style.display = 'flex'; });
-        item.addEventListener('mouseleave', () => { const btn = item.querySelector('.reward-delete'); if(btn) btn.style.display = 'none'; });
-    });
-
-    const btnContainer = document.getElementById(btnId);
-    if(!btnContainer) return;
-    const atMax = icons.length >= REDPACKET_MAX_ICONS;
-    btnContainer.innerHTML = `<div style="display:flex;gap:8px;margin-top:10px">
-        ${atMax ? '' : `<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="addRedpacketIcon('${side}')">＋ 添加图标</button>`}
-        ${icons.length > 1 ? `<button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;color:var(--danger);border-color:rgba(248,113,113,0.35)" onclick="removeLastRedpacketIcon('${side}')">－ 删除末尾</button>` : ''}
-    </div>`;
 }
 
 function addRedpacketIcon(side) {
@@ -8158,6 +8585,22 @@ function removeLastRedpacketIcon(side) {
     if(icons.length <= 1) return;
     icons.pop();
     renderRedpacketIconGrid();
+    renderPreview();
+    pushSnapshot();
+}
+
+function setRedpacketIconCount(instanceId, side, target) {
+    const iid = instanceId || _currentRedpacketInstanceId();
+    if(!iid) return;
+    const d = getRedpacketData(iid);
+    if(!d) return;
+    const icons = side === 'left' ? d.leftIcons : d.rightIcons;
+    const t = Math.max(1, Math.min(REDPACKET_MAX_ICONS, Number(target) || 1));
+    while(icons.length > t) icons.pop();
+    while(icons.length < t) icons.push({ url: 'assets/image/morenjinbi.png', id: side[0] + 'icon' + icons.length });
+    renderRedpacketIconGrid();
+    renderModuleList();
+    if(_expandedModuleId === iid) _rerenderModuleDetail(iid);
     renderPreview();
     pushSnapshot();
 }
@@ -8354,6 +8797,7 @@ function renderModule(m, pc, isBgMode) {
         case 'lottery':html = renderLottery(pc, isBgMode, m); break;
         case 'content':html = renderContent(pc, isBgMode, m); break;
         case 'custom': html = renderCustom(pc, isBgMode, m); break;
+        case 'pass':   html = renderPass(pc, isBgMode, m); break;
         case 'draw': html = renderDraw(pc, isBgMode); break;
         case 'recharge': html = renderRecharge(pc, isBgMode); break;
         case 'benefits': html = renderBenefits(pc, isBgMode); break;
@@ -8422,6 +8866,7 @@ function onEnterBtnTextEdit(el) {
 function renderRedpacket(pc, isBgMode, m) {
     const iid = (m && m.instanceId) || _currentRedpacketInstanceId();
     const d = getRedpacketData(iid);
+    normalizeRedpacketIconCount(d);
     const editable = 'contenteditable="true"';
     const S = 0.5; // 750→375 缩放比
     // 分享口令图标
@@ -8438,7 +8883,7 @@ function renderRedpacket(pc, isBgMode, m) {
             <div style="flex:1;height:${64*S}px;background:#F5F5F5;border-radius:${16*S}px;display:flex;align-items:center;padding:0 ${24*S}px">
                 <span style="font-size:${20*S}px;color:rgba(0,0,0,0.44);font-family:PingFang SC" class="editable-text" ${editable} data-field="codeText" onblur="onRedpacketTextEdit(this,'codeText','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.codeText}</span>
             </div>
-            <div style="width:${144*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div class="redpacket-copy-btn" style="width:${144*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="copyBtnText" onblur="onRedpacketTextEdit(this,'copyBtnText','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.copyBtnText}</span>
             </div>
         </div>`;
@@ -8453,7 +8898,7 @@ function renderRedpacket(pc, isBgMode, m) {
             <div style="flex:1;height:${64*S}px;background:#F5F5F5;border-radius:${16*S}px;display:flex;align-items:center;padding:0 ${24*S}px">
                 <span style="font-size:${20*S}px;color:rgba(0,0,0,0.44);font-family:PingFang SC" class="editable-text" ${editable} data-field="inputPlaceholder" onblur="onRedpacketTextEdit(this,'inputPlaceholder','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.inputPlaceholder}</span>
             </div>
-            <div style="width:${144*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div class="redpacket-use-btn" style="width:${144*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="useBtnText" onblur="onRedpacketTextEdit(this,'useBtnText','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.useBtnText}</span>
             </div>
         </div>`;
@@ -9186,75 +9631,24 @@ function renderAssist(pc, isBgMode) {
         </div>`;
     }).join('');
 
-    // 带任务模式
+    // 带任务模式：固定高度 401px，兜底图 351×369 水平垂直居中
     if(assistMode === 'withTask') {
-        const tasks = assistData.tasks || [];
-        const taskRows = tasks.map((t, ti) => `
-            <div class="assist-task-row">
-                <div class="assist-task-info">
-                    <div class="assist-task-name"><span class="editable-text" ${editable} data-field="assist_task_text_${ti}" onblur="onAssistTaskEdit(this,${ti},'text')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${t.text}</span></div>
-                    <div class="assist-task-reward"><span class="editable-text" ${editable} data-field="assist_task_reward_${ti}" onblur="onAssistTaskEdit(this,${ti},'reward')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${t.reward}</span></div>
-                </div>
-                <div class="assist-task-btn"><span class="editable-text" ${editable} data-field="assist_task_btn_${ti}" onblur="onAssistTaskEdit(this,${ti},'btnText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${t.btnText}</span></div>
-            </div>
-        `).join('');
-
+        const assistTaskImg = assistData.taskImg || 'assets/image/jifenduijiangdairenwu.png';
         return `
-        <div class="m-card-dark m-card-dark-full" style="background:${bgc}">
-            <div class="m-card-header">
-                <div class="m-card-title">
-                    <span class="editable-text" ${editable} data-field="title" onblur="onModuleTextEdit(this,assistData,'title')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="color:#fff">${assistData.title}</span>
-                </div>
-                <div class="m-card-subtitle"><span class="editable-text" ${editable} data-field="subtitle" onblur="onModuleTextEdit(this,assistData,'subtitle')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="color:rgba(255,255,255,0.60)">${assistData.subtitle}</span></div>
-            </div>
-            <div class="assist-task-section">
-                <div class="assist-task-section-title"><span class="editable-text" ${editable} data-field="taskTitle" onblur="onModuleTextEdit(this,assistData,'taskTitle')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${assistData.taskTitle || '领积分，兑奖品'}</span></div>
-                <div class="assist-score-row" style="padding:0 0 6px">
-                    <div class="assist-score-badge">
-                        <img src="${IMG_ASSIST2}3.svg" class="assist-badge-bg">
-                        <img src="${IMG_ASSIST2}4.svg" class="assist-badge-inner">
-                        <span class="assist-badge-text">积</span>
-                    </div>
-                    <span class="assist-score-text"><span class="editable-text" ${editable} data-field="scoreText" onblur="onModuleTextEdit(this,assistData,'scoreText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="color:#fff">${assistData.scoreText || '当前积分：10'}</span></span>
-                </div>
-                ${taskRows}
-                <div class="assist-more-tasks">
-                    <span>更多任务</span>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-                </div>
-            </div>
-            <div class="assist-rewards-scroll">
-                <div class="assist-rewards-track">
-                    ${rewardCards}
-                </div>
-                <div class="assist-rewards-fade"></div>
-            </div>
+        <div style="margin:0 12px;border-radius:12px;overflow:hidden;background:${bgc};height:401px;padding:16px 0;box-sizing:border-box;display:flex;align-items:center;justify-content:center">
+            ${isBgMode ? `<div style="width:351px;height:369px"></div>` : `
+            <img src="${assistTaskImg}" style="width:351px;height:369px;object-fit:contain;display:block">
+            `}
         </div>`;
     }
 
-    // 不带任务模式（原有逻辑）
+    // 不带任务模式：同样固定高度 401px，兜底图 351×369 水平垂直居中
+    const assistNoTaskImg = assistData.img || 'assets/image/jifenduijiang.png';
     return `
-    <div class="m-card-dark m-card-dark-full" style="background:${bgc}">
-        <div class="m-card-header">
-            <div class="m-card-title">
-                <span class="editable-text" ${editable} data-field="title" onblur="onModuleTextEdit(this,assistData,'title')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="color:#fff">${assistData.title}</span>
-            </div>
-            <div class="m-card-subtitle"><span class="editable-text" ${editable} data-field="subtitle" onblur="onModuleTextEdit(this,assistData,'subtitle')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="color:rgba(255,255,255,0.60)">${assistData.subtitle}</span></div>
-        </div>
-        <div class="assist-score-row">
-            <div class="assist-score-badge">
-                <img src="${IMG_ASSIST2}3.svg" class="assist-badge-bg">
-                <img src="${IMG_ASSIST2}4.svg" class="assist-badge-inner">
-                <span class="assist-badge-text">积</span>
-            </div>
-            <span class="assist-score-text"><span class="editable-text" ${editable} data-field="scoreText" onblur="onModuleTextEdit(this,assistData,'scoreText')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="color:#fff">${assistData.scoreText || '当前积分：10'}</span></span>
-        </div>
-        <div class="assist-rewards-scroll">
-            <div class="assist-rewards-track">
-                ${rewardCards}
-            </div>
-            <div class="assist-rewards-fade"></div>
-        </div>
+    <div style="margin:0 12px;border-radius:12px;overflow:hidden;background:${bgc};height:401px;padding:16px 0;box-sizing:border-box;display:flex;align-items:center;justify-content:center">
+        ${isBgMode ? `<div style="width:351px;height:369px"></div>` : `
+        <img src="${assistNoTaskImg}" style="width:351px;height:369px;object-fit:contain;display:block">
+        `}
     </div>`;
 }
 
@@ -9860,7 +10254,7 @@ function renderLottery(pc, isBgMode, m) {
                     </div>
                 </div>
                 ${isBgMode ? '' : `
-                <div style="width:${120*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <div class="lottery-task-slice-btn" style="width:${120*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                     <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="multiTaskBtn${ti}" onblur="onLotteryTaskEdit(this,${ti},'btnText','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${t.btnText}</span>
                 </div>`}
             </div>`).join('') : '';
@@ -9941,7 +10335,7 @@ function renderLottery(pc, isBgMode, m) {
                 </div>
             </div>
             ${isBgMode ? '' : `
-            <div style="width:${120*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div class="lottery-task-slice-btn" style="width:${120*S}px;height:${64*S}px;${getBtnStyle(pc,64)};border-radius:${16*S}px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                 <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="g9TaskBtn${ti}" onblur="onLotteryTaskEdit(this,${ti},'btnText','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${t.btnText}</span>
             </div>`}
         </div>`).join('') : '';
@@ -10373,6 +10767,114 @@ function uploadCustomImage(instanceId) {
     input.click();
 }
 
+// ---- Module: 通行证（pass）----
+// 与自由定制组件一致：上传一张图片；模块模板与其他模块完全一致，整体导出高度固定为 492px @2x
+function renderPass(pc, isBgMode, m) {
+    const iid = (m && m.instanceId) || _currentPassInstanceId();
+    const d = getPassData(iid);
+    const editable = 'contenteditable="true"';
+    const S = 0.5;
+    const imageOuterOffset = 24 * S;
+    const withTask = d.mode === 'withTask';
+
+    // 带任务：固定高度 401px @1x，内部图片 351×369px 居中展示
+    if(withTask) {
+        const taskImg = d.taskImg || PASS_TASK_DEFAULT_IMG;
+        const taskHtml = isBgMode ? `
+            <div style="width:351px;height:369px;margin:16px auto 0"></div>
+        ` : `
+            <div style="width:351px;height:369px;margin:16px auto 0;display:flex;align-items:center;justify-content:center">
+                <img src="${taskImg}" style="max-width:100%;max-height:100%;object-fit:contain;display:block">
+            </div>
+        `;
+        return `
+        <div class="m-tpl-card" style="margin:0 12px;border-radius:${24*S}px;background:#fff;position:relative;overflow:hidden;height:401px">
+            <div class="m-tpl-bg" style="position:absolute;left:0;top:0;width:100%;height:${200*S}px;pointer-events:none;overflow:hidden">
+                <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(${hexOrColorToRgb(pc)?.r||99},${hexOrColorToRgb(pc)?.g||165},${hexOrColorToRgb(pc)?.b||69},0.20) 0%, transparent 100%)"></div>
+            </div>
+            <div style="position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%">
+                ${taskHtml}
+            </div>
+        </div>`;
+    }
+
+    const titleHtml = `<span class="editable-text" ${editable} data-field="title" onblur="onPassFieldEdit(this,'title','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.title}</span>`;
+    const subtitleHtml = `<span class="editable-text" ${editable} data-field="subtitle" onblur="onPassFieldEdit(this,'subtitle','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${d.subtitle || '完成任务升级通行证，解锁更多奖励'}</span>`;
+
+    // 不带任务：与其他模块使用同一套模板；页面底图只去掉中间 PNG，顶部装饰/标题/副标题全部保留。
+    const passImg = d.img || PASS_DEFAULT_IMG;
+    const imgHtml = isBgMode ? `
+        <div style="width:calc(100% + ${48*S}px);height:${320*S}px;margin-left:-${imageOuterOffset}px"></div>
+    ` : `
+        <img src="${passImg}" style="display:block;width:calc(100% + ${48*S}px);height:auto;margin-left:-${imageOuterOffset}px;border-radius:${16*S}px">
+    `;
+
+    return renderModuleTemplate({
+        moduleId: iid,
+        title: titleHtml,
+        subtitle: subtitleHtml,
+        primaryColor: pc,
+        scale: S
+    }, imgHtml);
+}
+
+function onPassFieldEdit(el, field, instanceId) {
+    const v = el.textContent.trim();
+    const d = getPassData(instanceId); if(!d) return;
+    if(v !== d[field]) { d[field] = v; renderPreview(); pushSnapshot(); }
+}
+
+function updatePassMode(instanceId, mode) {
+    const d = getPassData(instanceId);
+    if(!d || d.mode === mode) return;
+    d.mode = mode;
+    renderPreview();
+    renderModuleList();
+    if(_expandedModuleId === instanceId) _rerenderModuleDetail(instanceId);
+    pushSnapshot();
+}
+
+function renderPassImageSlot(instanceId) {
+    const iid = instanceId || _currentPassInstanceId();
+    if(!iid) return;
+    const d = getPassData(iid);
+    const withTask = d.mode === 'withTask';
+    const activeImg = withTask ? (d.taskImg || PASS_TASK_DEFAULT_IMG) : (d.img || PASS_DEFAULT_IMG);
+    const container = document.getElementById(`passImageSlot_${iid}`);
+    if(!container) return;
+    container.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px;border:1px solid var(--border);border-radius:8px;background:var(--bg-elev-1)">
+            <div style="width:36px;height:36px;border-radius:4px;background:var(--bg-elev-2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+                <img src="${activeImg}" style="max-width:100%;max-height:100%;object-fit:cover" onerror="this.style.display='none'">
+            </div>
+            <button class="module-action-btn" style="flex:1;justify-content:center" onclick="uploadPassImage('${iid}')" title="上传图片替换">📤 上传图片</button>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:var(--text-4)">${withTask ? '默认使用 jifenduijiangdairenwu.png；模块高度 802px（@2x），不显示标题和副标题' : '默认使用 jifenduijiang.png；上传图片会按原比例缩放，宽度铺满 702px（@2x），不裁切'}</div>
+    `;
+}
+
+function uploadPassImage(instanceId) {
+    const d = getPassData(instanceId);
+    if(!d) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e) => {
+        const f = e.target.files[0];
+        if(!f || !f.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            if(d.mode === 'withTask') d.taskImg = ev.target.result;
+            else d.img = ev.target.result;
+            renderPassImageSlot(instanceId);
+            renderPreview();
+            pushSnapshot();
+        };
+        reader.readAsDataURL(f);
+    };
+    input.click();
+}
+
 
 
 
@@ -10640,7 +11142,7 @@ function renderGuestRedpacket(pc, isBgMode) {
         <div style="height:${300*S}px;position:relative;margin:0 ${51*S}px 0">
             <img src="${redpacketSrc}" style="position:absolute;left:0;top:0;width:${225*S}px;height:${300*S}px;object-fit:contain;display:block">
             <div style="position:absolute;left:${289*S}px;top:${15*S}px;width:${264*S}px;height:${270*S}px">
-                <div style="position:absolute;left:${8*S}px;top:${25*S}px;width:1px;height:${158*S}px;background:rgba(0,0,0,0.08)"></div>
+                <div style="position:absolute;left:${16*S}px;top:${25*S}px;width:1px;height:${158*S}px;background:rgba(0,0,0,0.08);transform:translateX(-50%)"></div>
                 <div style="position:absolute;left:0;top:0;width:100%;height:${32*S}px;display:flex;align-items:center;gap:${12*S}px">
                     <div style="position:relative;width:${32*S}px;height:${32*S}px;flex:none">
                         <img src="assets/CodeBuddyAssets/982_920/6.svg" style="width:100%;height:100%;display:block">
@@ -10946,6 +11448,7 @@ function resetAll() {
     const _initLotteryIid = genInstanceId();
     const _initContentIid = genInstanceId();
     const _initCustomIid = genInstanceId();
+    const _initPassIid = genInstanceId();
     modules.push(
         { instanceId: _initIid, id:'redpacket', name:'口令码', desc:'口令码分享/好友助力/奖品展示', enabled:true },
         { instanceId: _initSigninIid, id:'signin', name:'签到', desc:'连续签到领好礼，可选带抽奖', enabled:true },
@@ -10953,6 +11456,7 @@ function resetAll() {
         { instanceId: _initContentIid, id:'content', name:'内容组件', desc:'多张图片，可选小标题', enabled:true },
         { instanceId: _initCustomIid, id:'custom',  name:'自由定制组件', desc:'上传一张图片，宽度自适应铺满', enabled:true },
         { instanceId: _initMoreIid, id:'more',   name:'更多福利内容', desc:'多栏福利展示，可配置图标和名称', enabled:true },
+        { instanceId: _initPassIid, id:'pass',  name:'通行证', desc:'上传一张切图，固定高度 492px', enabled:true },
     );
     // 恢复充值返利默认数据
     rechargeData = { title: '充值返利', subtitle: '这里是一句文案我也不知道写啥', bgColor: '#065A5C' };
@@ -10973,6 +11477,8 @@ function resetAll() {
     contentDataMap[_initContentIid] = JSON.parse(JSON.stringify(CONTENT_DATA_TEMPLATE));
     customDataMap = {};
     customDataMap[_initCustomIid] = JSON.parse(JSON.stringify(CUSTOM_DATA_TEMPLATE));
+    passDataMap = {};
+    passDataMap[_initPassIid] = JSON.parse(JSON.stringify(PASS_DATA_TEMPLATE));
     // 恢复其他模块默认数据
     roleData = { selectText: '点击选择角色' };
     assistData = { title: '攒好友助力兑奖品', subtitle: 'Q币每12小时补货一次，补完即止', taskTitle: '领积分，兑奖品', tasks: [
@@ -11127,6 +11633,7 @@ function getSnapshot() {
         lotteryDataMap: JSON.parse(JSON.stringify(lotteryDataMap || {})),
         contentDataMap: JSON.parse(JSON.stringify(contentDataMap || {})),
         customDataMap: JSON.parse(JSON.stringify(customDataMap || {})),
+        passDataMap: JSON.parse(JSON.stringify(passDataMap || {})),
         // ===== 客态数据 =====
         currentView,
         guestColors: {...guestColors},
@@ -11185,17 +11692,21 @@ function restoreSnapshot(snapStr) {
     snap.modules.forEach(sm => {
         if(sm.id === 'footer') return; // footer不再作为可配置模块
         // 过滤掉已移除的内置模块（只保留 redpacket；如需扩展请在此补充）
-        const allowedIds = ['redpacket', 'signin', 'more', 'lottery', 'content', 'custom'];
+        const allowedIds = ['redpacket', 'signin', 'more', 'lottery', 'content', 'custom', 'pass'];
         if(!allowedIds.includes(sm.id)) return;
         // 保留旧快照的 instanceId；旧版快照没有这个字段，则现生成一个
         // 模块名按 id 统一成无 emoji 版本（向后兼容，老快照带 emoji 的会被迁移）
-        const NAME_BY_ID = { redpacket: '口令码', signin: '签到', more: '更多福利内容', lottery: '抽奖', content: '内容组件', custom: '自由定制组件' };
+        const NAME_BY_ID = { redpacket: '口令码', signin: '签到', more: '更多福利内容', lottery: '抽奖', content: '内容组件', custom: '自由定制组件', pass: '通行证' };
         const normalizedName = NAME_BY_ID[sm.id] || sm.name;
         modules.push({instanceId: sm.instanceId || genInstanceId(), id:sm.id, name:normalizedName, desc:sm.desc, enabled:sm.enabled});
     });
     // 如果快照里一个 redpacket 都没有（比如全是已移除模块），兜底补一个默认口令码
     if(modules.length === 0) {
         modules.push({ instanceId: genInstanceId(), id:'redpacket', name:'口令码', desc:'口令码分享/好友助力/奖品展示', enabled:true });
+    }
+    // 旧项目自动补齐新增的通行证模块
+    if(!modules.some(m => m.id === 'pass')) {
+        modules.push({ instanceId: genInstanceId(), id:'pass', name:'通行证', desc:'上传一张切图，固定高度 492px', enabled:true });
     }
 
     // 恢复模块装饰覆盖
@@ -11274,6 +11785,15 @@ function restoreSnapshot(snapStr) {
     }
     modules.forEach(mm => {
         if(mm.id === 'custom') getCustomData(mm.instanceId);
+    });
+
+    // 恢复 passDataMap（通行证数据）
+    passDataMap = {};
+    if(snap.passDataMap && typeof snap.passDataMap === 'object') {
+        passDataMap = JSON.parse(JSON.stringify(snap.passDataMap));
+    }
+    modules.forEach(mm => {
+        if(mm.id === 'pass') getPassData(mm.instanceId);
     });
 
     // 恢复其他模块的可编辑数据
@@ -11641,7 +12161,8 @@ async function exportActualImage() {
             height: c1.offsetHeight,
             cacheBust: true,
             backgroundColor: null,
-            style: { transform: 'none' },
+            // 导出 PNG 不要继承预览容器的圆角裁切；只保留界面预览的圆角。
+            style: { transform: 'none', borderRadius: '0', overflow: 'visible' },
         });
         const link1 = document.createElement('a');
         link1.download = `活动页_实际样式_${Date.now()}.png`;
@@ -11684,7 +12205,8 @@ async function exportBgImage() {
             height: c2.offsetHeight,
             cacheBust: true,
             backgroundColor: null,
-            style: { transform: 'none' },
+            // 导出 PNG 不要继承预览容器的圆角裁切；只保留界面预览的圆角。
+            style: { transform: 'none', borderRadius: '0', overflow: 'visible' },
         });
         const link2 = document.createElement('a');
         link2.download = `活动页_底图_${Date.now()}.png`;
@@ -11710,6 +12232,10 @@ let sliceScale = 2; // 默认2倍图
 let _sliceBubbleTimer = null;
 let _sliceBubbleEl = null;
 let _sliceHoverTarget = null;
+const ENTER_BUTTON_SLICE_STATES = ['进入游戏', '下载游戏', '注册领福利', '极速更新', '极速更新中'];
+const REDPACKET_COPY_BUTTON_SLICE_STATES = ['生成', '复制'];
+const REDPACKET_USE_BUTTON_SLICE_STATES = ['去使用'];
+const LOTTERY_TASK_BUTTON_SLICE_STATES = ['领取', '已领取'];
 
 // --- 右侧面板收起/展开 ---
 function togglePanelRight() {
@@ -11750,6 +12276,10 @@ function removeSliceBubble() {
 function showSliceBubble(target) {
     removeSliceBubble();
     const rect = target.getBoundingClientRect();
+    const isEnterButton = target.classList.contains('m-role-enter-btn');
+    const isRedpacketCopyButton = target.classList.contains('redpacket-copy-btn');
+    const isRedpacketUseButton = target.classList.contains('redpacket-use-btn');
+    const isLotteryTaskButton = target.classList.contains('lottery-task-slice-btn');
     const bubble = document.createElement('div');
     bubble.className = 'slice-bubble';
     bubble.innerHTML = `
@@ -11762,7 +12292,15 @@ function showSliceBubble(target) {
                 </div>
             </div>
             <div class="slice-bubble-extra">
-                <label><input type="checkbox" id="sliceCompletedCheck" checked>附带完成态按钮</label>
+                ${isEnterButton
+                    ? '<span style="font-size:11px;color:var(--text-2)">将固定导出：进入游戏 / 下载游戏 / 注册领福利 / 极速更新 / 极速更新中</span>'
+                    : isRedpacketCopyButton
+                        ? '<span style="font-size:11px;color:var(--text-2)">将固定导出：生成 / 复制</span>'
+                    : isRedpacketUseButton
+                        ? '<span style="font-size:11px;color:var(--text-2)">将固定导出：去使用</span>'
+                    : isLotteryTaskButton
+                        ? '<span style="font-size:11px;color:var(--text-2)">将固定导出：领取 / 已领取</span>'
+                    : '<label><input type="checkbox" id="sliceCompletedCheck" checked>附带完成态按钮</label>'}
             </div>
         </div>`;
     document.body.appendChild(bubble);
@@ -11839,13 +12377,13 @@ function getCompletedText(originalText) {
     return '已' + t;
 }
 
-// 用 Canvas 绘制完成态按钮 (灰色背景 #B3B3B3, 白色文字, 匹配原按钮尺寸和圆角)
+// 用 Canvas 绘制完成态按钮 (灰色背景 #B3B3B3, 白色文字，切图圆角与界面预览一致)
 function drawCompletedButton(originalTarget, completedText) {
     const style = window.getComputedStyle(originalTarget);
     const w = originalTarget.offsetWidth;
     const h = originalTarget.offsetHeight;
     const scale = 2;
-    const radius = parseInt(style.borderRadius) || 8;
+    const radius = parseFloat(style.borderRadius) || 0;
 
     const cvs = document.createElement('canvas');
     cvs.width = w * scale;
@@ -11881,6 +12419,144 @@ function drawCompletedButton(originalTarget, completedText) {
     return cvs.toDataURL('image/png');
 }
 
+function drawRoundedRectPath(ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h - rr);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    ctx.lineTo(x + rr, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.closePath();
+}
+
+function createButtonFillFromStyle(ctx, style, x, y, h) {
+    const bgImg = style.backgroundImage || '';
+    const colors = bgImg.match(/rgba?\([^)]+\)|#[0-9a-fA-F]{3,8}/g);
+    if(colors && colors.length >= 2) {
+        const gradient = ctx.createLinearGradient(0, y, 0, y + h);
+        gradient.addColorStop(0, colors[0]);
+        gradient.addColorStop(1, colors[colors.length - 1]);
+        return gradient;
+    }
+    return style.backgroundColor && style.backgroundColor !== 'rgba(0, 0, 0, 0)'
+        ? style.backgroundColor
+        : '#63A545';
+}
+
+function drawEnterButtonState(originalTarget, text) {
+    const style = window.getComputedStyle(originalTarget);
+    const textNode = originalTarget.querySelector('.editable-text') || originalTarget;
+    const textStyle = window.getComputedStyle(textNode);
+    const rect = originalTarget.getBoundingClientRect();
+    const scale = 2;
+    const pad = 8;
+    const w = Math.ceil(rect.width);
+    const h = Math.ceil(rect.height);
+    const radius = parseFloat(style.borderRadius) || 0;
+
+    const cvs = document.createElement('canvas');
+    cvs.width = (w + pad * 2) * scale;
+    cvs.height = (h + pad * 2) * scale;
+    const ctx = cvs.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.clearRect(0, 0, w + pad * 2, h + pad * 2);
+
+    const x = pad;
+    const y = pad;
+    drawRoundedRectPath(ctx, x, y, w, h, radius);
+    ctx.fillStyle = createButtonFillFromStyle(ctx, style, x, y, h);
+    ctx.fill();
+
+    // Match the subtle inset highlight/shadow used by the live button style.
+    ctx.save();
+    drawRoundedRectPath(ctx, x, y, w, h, radius);
+    ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,0.20)';
+    ctx.fillRect(x, y, w, 1);
+    ctx.fillStyle = 'rgba(0,0,0,0.20)';
+    ctx.fillRect(x, y + h - 1, w, 1);
+    ctx.restore();
+
+    if(text === '已领取') {
+        ctx.save();
+        drawRoundedRectPath(ctx, x, y, w, h, radius);
+        ctx.clip();
+        ctx.globalCompositeOperation = 'saturation';
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x, y, w, h);
+        ctx.restore();
+        ctx.globalCompositeOperation = 'source-over';
+    }
+
+    const fontSize = parseFloat(textStyle.fontSize || style.fontSize) || 14;
+    const fontWeight = textStyle.fontWeight || style.fontWeight || 600;
+    const fontFamily = textStyle.fontFamily || style.fontFamily || 'PingFang SC, sans-serif';
+    ctx.fillStyle = textStyle.color || '#FFFFFF';
+    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x + w / 2, y + h / 2);
+
+    return cvs.toDataURL('image/png');
+}
+
+async function addTransparentPaddingToDataUrl(dataUrl, paddingCssPx = 8, pixelRatio = 2) {
+    const img = new Image();
+    img.src = dataUrl;
+    await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+    });
+
+    const pad = Math.ceil(paddingCssPx * pixelRatio);
+    const cvs = document.createElement('canvas');
+    cvs.width = img.naturalWidth + pad * 2;
+    cvs.height = img.naturalHeight + pad * 2;
+    const ctx = cvs.getContext('2d');
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+    ctx.drawImage(img, pad, pad);
+    return cvs.toDataURL('image/png');
+}
+
+async function captureSliceTarget(target, textOverride) {
+    const textEl = target.querySelector('.editable-text') || target;
+    const originalText = textEl.textContent;
+    if(textOverride != null) textEl.textContent = textOverride;
+    try {
+        await new Promise(requestAnimationFrame);
+        await convertImagesToBase64(target);
+        const dataUrl = await htmlToImage.toPng(target, {
+            pixelRatio: 2,
+            cacheBust: true,
+            backgroundColor: null,
+            style: { transform: 'none' },
+        });
+        return addTransparentPaddingToDataUrl(dataUrl, 8, 2);
+    } finally {
+        if(textOverride != null) {
+            textEl.textContent = originalText;
+            await new Promise(requestAnimationFrame);
+        }
+    }
+}
+
+async function addFixedEnterButtonSlices(target) {
+    await addFixedTextButtonSlices(target, ENTER_BUTTON_SLICE_STATES);
+}
+
+async function addFixedTextButtonSlices(target, states) {
+    for(const state of states) {
+        const dataUrl = drawEnterButtonState(target, state);
+        const id = 'slice_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
+        sliceItems.push({ id, name: state, dataUrl });
+    }
+}
+
 async function confirmSlice(e) {
     e.stopPropagation();
     const target = _sliceHoverTarget;
@@ -11891,14 +12567,36 @@ async function confirmSlice(e) {
     const wantCompleted = completedCheck ? completedCheck.checked : false;
 
     try {
-        await convertImagesToBase64(target);
-        const _isFileProto = location.protocol === 'file:';
-        const dataUrl = await htmlToImage.toPng(target, {
-            pixelRatio: 2,
-            cacheBust: true,
-            backgroundColor: null,
-            style: { transform: 'none' },
-        });
+        if(target.classList.contains('m-role-enter-btn')) {
+            await addFixedEnterButtonSlices(target);
+            renderSliceList();
+            showPanelRight();
+            removeSliceBubble();
+            return;
+        }
+        if(target.classList.contains('redpacket-copy-btn')) {
+            await addFixedTextButtonSlices(target, REDPACKET_COPY_BUTTON_SLICE_STATES);
+            renderSliceList();
+            showPanelRight();
+            removeSliceBubble();
+            return;
+        }
+        if(target.classList.contains('redpacket-use-btn')) {
+            await addFixedTextButtonSlices(target, REDPACKET_USE_BUTTON_SLICE_STATES);
+            renderSliceList();
+            showPanelRight();
+            removeSliceBubble();
+            return;
+        }
+        if(target.classList.contains('lottery-task-slice-btn')) {
+            await addFixedTextButtonSlices(target, LOTTERY_TASK_BUTTON_SLICE_STATES);
+            renderSliceList();
+            showPanelRight();
+            removeSliceBubble();
+            return;
+        }
+
+        const dataUrl = await captureSliceTarget(target);
         const id = 'slice_' + Date.now() + '_' + Math.random().toString(36).substr(2,5);
         const nameText = target.textContent.trim().substring(0, 20) || '按钮';
         sliceItems.push({ id, name: nameText, dataUrl });
@@ -11958,29 +12656,48 @@ function removeSliceItem(id) {
     renderSliceList();
 }
 
+function sanitizeFileName(name) {
+    return String(name || '切图').trim().replace(/[\\/:*?"<>|]/g, '_').replace(/\s+/g, '_') || '切图';
+}
+
+function canvasToBlob(canvas) {
+    return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+async function getSlicePngBlob(item) {
+    const img = new Image();
+    img.src = item.dataUrl;
+    await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+    });
+
+    // 源图是按 2x 截取的，导出倍率按完整画布等比缩放；向上取整避免边缘被裁掉。
+    const ratio = sliceScale / 2;
+    const targetW = Math.ceil(img.naturalWidth * ratio);
+    const targetH = Math.ceil(img.naturalHeight * ratio);
+    const cvs = document.createElement('canvas');
+    cvs.width = targetW;
+    cvs.height = targetH;
+    const ctx = cvs.getContext('2d');
+    ctx.clearRect(0, 0, targetW, targetH);
+    ctx.drawImage(img, 0, 0, targetW, targetH);
+    return canvasToBlob(cvs);
+}
+
 // --- 导出单个切图 ---
 async function exportSingleSlice(id) {
     const item = sliceItems.find(s => s.id === id);
     if(!item) return;
 
-    const img = new Image();
-    img.src = item.dataUrl;
-    await new Promise(r => { img.onload = r; });
-
-    const targetW = Math.round(img.naturalWidth / 2 * sliceScale);
-    const targetH = Math.round(img.naturalHeight / 2 * sliceScale);
-
-    const cvs = document.createElement('canvas');
-    cvs.width = targetW;
-    cvs.height = targetH;
-    const ctx = cvs.getContext('2d');
-    ctx.drawImage(img, 0, 0, targetW, targetH);
-
     const suffix = item.isCompleted ? '_完成态' : '';
+    const blob = await getSlicePngBlob(item);
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.download = `切图_${item.name}${suffix}_${sliceScale}x.png`;
-    link.href = cvs.toDataURL('image/png');
+    link.download = `切图_${sanitizeFileName(item.name)}${suffix}_${sliceScale}x.png`;
+    link.href = url;
     link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 function clearAllSlices() {
@@ -11993,32 +12710,27 @@ function clearAllSlices() {
 // --- 导出全部切图 ---
 async function exportAllSlices() {
     if(sliceItems.length === 0) return;
+    if(typeof JSZip === 'undefined') {
+        alert('压缩包组件加载失败，请检查网络后重试');
+        return;
+    }
 
+    const zip = new JSZip();
     for(let i = 0; i < sliceItems.length; i++) {
         const item = sliceItems[i];
-        // 重新从原始2x canvas数据按倍率缩放
-        const img = new Image();
-        img.src = item.dataUrl;
-        await new Promise(r => { img.onload = r; });
-
-        const targetW = Math.round(img.naturalWidth / 2 * sliceScale);
-        const targetH = Math.round(img.naturalHeight / 2 * sliceScale);
-
-        const cvs = document.createElement('canvas');
-        cvs.width = targetW;
-        cvs.height = targetH;
-        const ctx = cvs.getContext('2d');
-        ctx.drawImage(img, 0, 0, targetW, targetH);
-
         const suffix = item.isCompleted ? '_完成态' : '';
-        const link = document.createElement('a');
-        link.download = `切图_${item.name}${suffix}_${sliceScale}x_${i+1}.png`;
-        link.href = cvs.toDataURL('image/png');
-        link.click();
-
-        // 短暂延迟避免浏览器阻止多次下载
-        await new Promise(r => setTimeout(r, 300));
+        const blob = await getSlicePngBlob(item);
+        const order = String(i + 1).padStart(2, '0');
+        zip.file(`${order}_${sanitizeFileName(item.name)}${suffix}_${sliceScale}x.png`, blob);
     }
+
+    const zipBlob = await zip.generateAsync({ type:'blob' });
+    const url = URL.createObjectURL(zipBlob);
+    const link = document.createElement('a');
+    link.download = `切图_${sliceScale}x_${new Date().toISOString().slice(0,10)}.zip`;
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // --- 绑定预览区按钮 hover 事件 ---
@@ -12036,6 +12748,9 @@ function bindSliceHoverEvents() {
         '.m-btn-primary',
         '.m-btn-sm',
         '.m-role-enter-btn',
+        '.redpacket-copy-btn',
+        '.redpacket-use-btn',
+        '.lottery-task-slice-btn',
         '.m-role-select',
         '.signin-day',
         '.benefit-btn',
