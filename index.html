@@ -1036,6 +1036,9 @@
             margin-bottom:20px;
             font-size:14px;
         }
+        .panel-left.tool-single-mode #hostPanel .section.tool-active-section .section-title .btn-danger-text {
+            pointer-events:auto;
+        }
         .panel-left.tool-single-mode #hostPanel .section.tool-active-section .section-collapse-btn { display:none; }
         .panel-left.tool-single-mode #hostPanel .section.tool-active-section.collapsed .section-body { display:block !important; }
         .panel-left.tool-single-mode #guestPanel .section {
@@ -1596,9 +1599,7 @@
         }
         .preview-container img.poster-img { display:block; width:100%; }
         .main .panel-center {
-            /* 预览区本身是滚动容器。这里必须保留顶部安全距离，
-               否则 sticky 的预览标题会贴到容器顶边，看起来像被顶部 UI 裁切。 */
-            padding:16px 0 120px;
+            padding:0 0 120px;
             background:#141316;
             justify-content:center;
             min-width:0;
@@ -1636,7 +1637,7 @@
             border-radius:16px;
             box-shadow:none;
             position:sticky;
-            top:16px;
+            top:0;
             z-index:10;
             font-size:14px;
             font-weight:400;
@@ -4241,7 +4242,7 @@ const MORE_DATA_TEMPLATE = {
     groups: [
         {
             label: '每日抽奖福利',
-            btnText: '立即抽奖',
+            btnText: '立即领取',
             items: [
                 { img: 'assets/image/morenjinbi.png', name: '88Q币' },
                 { img: 'assets/image/morenjinbi.png', name: '冰冻结晶头像框*1' },
@@ -4251,7 +4252,7 @@ const MORE_DATA_TEMPLATE = {
         },
         {
             label: '新春回归福利',
-            btnText: '立即抽奖',
+            btnText: '立即领取',
             items: [
                 { img: 'assets/image/morenjinbi.png', name: '亲密玫瑰*1' },
                 { img: 'assets/image/morenjinbi.png', name: 'QQ浏览器表情*1' },
@@ -10220,9 +10221,9 @@ function renderMore(pc, isBgMode, m) {
                 </div>
             </div>`;
 
-        // 全宽按钮（80 高）
+        // 全宽按钮（80 高）— 支持切图
         const btn = `
-            <div style="width:100%;height:${80*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;margin-top:${16*S}px;display:flex;align-items:center;justify-content:center">
+            <div class="more-benefit-slice-btn" style="width:100%;height:${80*S}px;${getBtnStyle(pc,80)};border-radius:${16*S}px;margin-top:${16*S}px;display:flex;align-items:center;justify-content:center;cursor:pointer" onmouseenter="onPreviewBtnMouseEnter(event)" onmouseleave="onPreviewBtnMouseLeave(event)">
                 <span style="color:#fff;font-size:${28*S}px;font-family:PingFang SC" class="editable-text" ${editable} data-field="gbtn${gi}" onblur="onMoreGroupFieldEdit(this,${gi},'btnText','${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${g.btnText}</span>
             </div>`;
 
@@ -12440,6 +12441,7 @@ const ENTER_BUTTON_SLICE_STATES = ['进入游戏', '下载游戏', '注册领福
 const REDPACKET_COPY_BUTTON_SLICE_STATES = ['生成', '复制', '已领取'];
 const REDPACKET_USE_BUTTON_SLICE_STATES = ['去使用'];
 const LOTTERY_TASK_BUTTON_SLICE_STATES = ['领取', '已领取'];
+const MORE_BENEFIT_BUTTON_SLICE_STATES = ['立即领取', '已领取'];
 
 // --- 右侧面板收起/展开 ---
 function togglePanelRight() {
@@ -12484,6 +12486,7 @@ function showSliceBubble(target) {
     const isRedpacketCopyButton = target.classList.contains('redpacket-copy-btn');
     const isRedpacketUseButton = target.classList.contains('redpacket-use-btn');
     const isLotteryTaskButton = target.classList.contains('lottery-task-slice-btn');
+    const isMoreBenefitButton = target.classList.contains('more-benefit-slice-btn');
     const bubble = document.createElement('div');
     bubble.className = 'slice-bubble';
     bubble.innerHTML = `
@@ -12504,6 +12507,8 @@ function showSliceBubble(target) {
                         ? '<span style="font-size:11px;color:var(--text-2)">将固定导出：去使用</span>'
                     : isLotteryTaskButton
                         ? '<span style="font-size:11px;color:var(--text-2)">将固定导出：领取 / 已领取</span>'
+                    : isMoreBenefitButton
+                        ? '<span style="font-size:11px;color:var(--text-2)">将固定导出：立即领取 / 已领取</span>'
                     : '<label><input type="checkbox" id="sliceCompletedCheck" checked>附带完成态按钮</label>'}
             </div>
         </div>`;
@@ -12794,6 +12799,13 @@ async function confirmSlice(e) {
         }
         if(target.classList.contains('lottery-task-slice-btn')) {
             await addFixedTextButtonSlices(target, LOTTERY_TASK_BUTTON_SLICE_STATES);
+            renderSliceList();
+            showPanelRight();
+            removeSliceBubble();
+            return;
+        }
+        if(target.classList.contains('more-benefit-slice-btn')) {
+            await addFixedTextButtonSlices(target, MORE_BENEFIT_BUTTON_SLICE_STATES);
             renderSliceList();
             showPanelRight();
             removeSliceBubble();
