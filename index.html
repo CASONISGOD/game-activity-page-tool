@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             /* === SaaS Dark Admin (同 shenhe tool) === */
@@ -189,6 +190,27 @@
         .light-mode .header-save-status.dirty { color:#E54D4D !important; }
         .light-mode .header-project-info.need-info .header-project-name {
             color:#E54D4D !important;
+        }
+
+        /* 智能导入加载动画 */
+        @keyframes smart-import-spin {
+            0% { transform:rotate(0deg); }
+            100% { transform:rotate(360deg); }
+        }
+        .smart-import-loading {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            color:var(--primary);
+        }
+        .smart-import-loading::before {
+            content:'';
+            width:12px;
+            height:12px;
+            border:2px solid var(--primary-soft);
+            border-top-color:var(--primary);
+            border-radius:50%;
+            animation:smart-import-spin 0.8s linear infinite;
         }
 
         /* 日间模式切换按钮 */
@@ -3766,6 +3788,7 @@
         <button class="btn btn-outline" onclick="resetAll()">重置项目</button>
         <button class="btn btn-outline" onclick="importProject()" title="导入项目文件">导入JSON</button>
         <button class="btn btn-outline" onclick="exportProject()" title="导出项目文件">导出JSON</button>
+        <button class="btn btn-outline" onclick="showSmartImportPanel()" title="上传文档和道具图包，智能识别并填充" style="color:var(--primary);border-color:var(--primary)">智能导入</button>
         <button class="btn btn-outline" id="exportActualBtn" onclick="exportActualImage()">导出预览PNG</button>
         <button class="btn btn-primary" id="exportBgBtn" onclick="exportBgImage()">导出底图PNG</button>
     </div>
@@ -10194,11 +10217,11 @@ function renderMore(pc, isBgMode, m) {
     const renderGroup = (g, gi) => {
         const count = g.items.length || 1;
         const itemsHtml = g.items.map((it, ii) => `
-            <div style="flex:1 1 0;min-width:0;height:${148*S}px;position:relative">
-                <div style="margin:0 auto;width:${72*S}px;height:${72*S}px;background:#fff;border-radius:${16*S}px;overflow:hidden">
+            <div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="width:${72*S}px;height:${72*S}px;background:#fff;border-radius:${16*S}px;overflow:hidden;flex-shrink:0">
                     <img src="${it.img}" style="width:100%;height:100%;object-fit:cover;display:block">
                 </div>
-                <div style="margin-top:${16*S}px;text-align:center;font-size:${22*S}px;color:#242424;line-height:1.3;font-family:PingFang SC;padding:0 ${4*S}px;word-break:break-all">
+                <div style="margin-top:${8*S}px;text-align:center;font-size:${22*S}px;color:#242424;line-height:1.3;font-family:PingFang SC;padding:0 ${4*S}px;word-break:break-all">
                     <span class="editable-text" ${editable} data-field="mname${gi}_${ii}" onblur="onMoreItemNameEdit(this,${gi},${ii},'${iid}')" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${it.name}</span>
                 </div>
             </div>`).join('');
@@ -10215,8 +10238,8 @@ function renderMore(pc, isBgMode, m) {
 
         // 灰底卡片：道具均分水平排列，居中
         const card = `
-            <div style="position:relative;width:100%;height:${196*S}px;background:#F6F7FA;border-radius:${16*S}px;margin-top:${16*S}px;padding:${24*S}px ${24*S}px 0;box-sizing:border-box">
-                <div style="display:flex;align-items:flex-start;gap:${12*S}px">
+            <div style="position:relative;width:100%;background:#F6F7FA;border-radius:${16*S}px;margin-top:${16*S}px;padding:${16*S}px ${24*S}px;box-sizing:border-box">
+                <div style="display:flex;align-items:flex-start;justify-content:center;gap:${12*S}px">
                     ${itemsHtml}
                 </div>
             </div>`;
@@ -13203,6 +13226,784 @@ function navigateToModule(moduleId, instanceId) {
             targetSection.classList.remove('highlight-flash');
         }, { once:true });
     }, 150);
+}
+
+// ===== 智能识别文档导入 =====
+function showSmartImportPanel() {
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.id = 'smartImportPanel';
+    overlay.onclick = (e) => { if(e.target===overlay) overlay.remove(); };
+    overlay.innerHTML = `
+        <div class="dialog-box" style="max-width:540px">
+            <div class="dialog-title">📊 智能导入</div>
+            <div style="font-size:12px;color:var(--text-3);margin-bottom:16px">上传活动文案文档和道具图包，工具将自动识别内容并填充到页面</div>
+            <div style="display:flex;gap:16px">
+                <!-- 文案文档上传区 -->
+                <div style="flex:1;border:1.5px dashed var(--border-strong);border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative" id="smartImportDocZone" onclick="smartImportDocFromPanel()" onmouseenter="this.style.borderColor='var(--primary)';this.style.background='var(--primary-soft)'" onmouseleave="this.style.borderColor='var(--border-strong)';this.style.background='transparent'">
+                    <div style="font-size:28px;margin-bottom:8px">📄</div>
+                    <div style="font-size:13px;font-weight:500;color:var(--text-1)">文案文档</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:4px">Excel / CSV</div>
+                    <div id="smartImportDocStatus" style="font-size:11px;color:var(--success);margin-top:8px;min-height:16px"></div>
+                </div>
+                <!-- 道具图包上传区 -->
+                <div style="flex:1;border:1.5px dashed var(--border-strong);border-radius:12px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative" id="smartImportIconZone" onclick="smartImportIconsFromPanel()" onmouseenter="this.style.borderColor='var(--primary)';this.style.background='var(--primary-soft)'" onmouseleave="this.style.borderColor='var(--border-strong)';this.style.background='transparent'">
+                    <div style="font-size:28px;margin-bottom:8px">🖼️</div>
+                    <div style="font-size:13px;font-weight:500;color:var(--text-1)">道具图包</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:4px">ZIP 压缩包</div>
+                    <div id="smartImportIconStatus" style="font-size:11px;color:var(--success);margin-top:8px;min-height:16px"></div>
+                </div>
+            </div>
+            <div style="margin-top:14px;padding:10px;background:var(--bg-elev-1);border-radius:8px;font-size:11px;color:var(--text-3);line-height:1.8">
+                <b>使用说明：</b><br>
+                • 文案文档：支持标准模板或策划配置表，自动识别模块和奖品文案<br>
+                • 道具图包：ZIP 里的图片按文件名自动匹配工具中的道具名称<br>
+                • 两者可单独上传，也可一起上传后统一确认导入
+            </div>
+            <div class="dialog-actions">
+                <button class="btn btn-outline" onclick="document.getElementById('smartImportPanel').remove()">关闭</button>
+                <button class="btn btn-primary" id="smartImportConfirmBtn" onclick="confirmSmartImportAll()" disabled style="opacity:0.5;cursor:not-allowed">确认导入</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    window._smartPanelDocResult = null;
+    window._smartPanelIconData = null;
+}
+
+function smartImportDocFromPanel() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls,.csv';
+    input.onchange = (e) => {
+        const f = e.target.files[0];
+        if(!f) return;
+        const status = document.getElementById('smartImportDocStatus');
+        if(status) status.innerHTML = '<span class="smart-import-loading">识别中...</span>';
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = new Uint8Array(ev.target.result);
+                const wb = XLSX.read(data, { type:'array' });
+                const result = parseSmartDoc(wb);
+                window._smartPanelDocResult = result;
+                if(status) status.textContent = `✓ ${f.name}`;
+                updateSmartImportBtn();
+            } catch(err) {
+                if(status) status.innerHTML = `<span style="color:var(--danger)">✕ 解析失败</span>`;
+                alert('文档解析失败：' + err.message);
+            }
+        };
+        reader.readAsArrayBuffer(f);
+    };
+    input.click();
+}
+
+function smartImportIconsFromPanel() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.zip';
+    input.onchange = async (e) => {
+        const f = e.target.files[0];
+        if(!f) return;
+        const status = document.getElementById('smartImportIconStatus');
+        if(status) status.innerHTML = '<span class="smart-import-loading">识别中...</span>';
+        try {
+            const imageFiles = await extractImagesFromZip(f);
+            const count = Object.keys(imageFiles).length;
+            if(count === 0) { if(status) status.innerHTML = `<span style="color:var(--danger)">✕ 未找到图片</span>`; return; }
+            window._smartPanelIconData = imageFiles;
+            if(status) status.textContent = `✓ ${f.name}（${count}张）`;
+            updateSmartImportBtn();
+        } catch(err) {
+            if(status) status.innerHTML = `<span style="color:var(--danger)">✕ 解析失败</span>`;
+            alert('ZIP 解析失败：' + err.message);
+        }
+    };
+    input.click();
+}
+
+function updateSmartImportBtn() {
+    const btn = document.getElementById('smartImportConfirmBtn');
+    if(!btn) return;
+    const hasDoc = !!window._smartPanelDocResult;
+    const hasIcons = !!window._smartPanelIconData;
+    if(hasDoc || hasIcons) {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+    }
+}
+
+function confirmSmartImportAll() {
+    const overlay = document.getElementById('smartImportPanel');
+    if(overlay) overlay.remove();
+
+    // 先导入文案
+    if(window._smartPanelDocResult) {
+        window._smartImportResult = window._smartPanelDocResult;
+        applySmartImport();
+    }
+
+    // 再导入图包（需要在文案导入后执行，这样道具名称才是最新的）
+    if(window._smartPanelIconData) {
+        setTimeout(() => {
+            const matchResult = matchIconsToData(window._smartPanelIconData);
+            if(matchResult.matched.length > 0) {
+                window._iconImportData = { matched: matchResult.matched, imageFiles: window._smartPanelIconData };
+                applyIconImport();
+            }
+            // 显示结果摘要
+            const total = Object.keys(window._smartPanelIconData).length;
+            const matched = matchResult.matched.length;
+            if(matched < total) {
+                console.log(`道具图包：${matched}/${total} 张匹配成功，${matchResult.unmatched.length} 张未匹配`);
+            }
+            window._smartPanelDocResult = null;
+            window._smartPanelIconData = null;
+        }, 100);
+    }
+}
+
+function smartImportDoc() { showSmartImportPanel(); }
+
+function parseSmartDoc(wb) {
+    const sheetNames = wb.SheetNames.map(s => s.trim());
+    // 判断格式类型
+    if(sheetNames.includes('项目基础信息') || sheetNames.includes('口令码') || sheetNames.includes('签到')) {
+        return parseStandardTemplate(wb);
+    }
+    // 策划表格：检测列名
+    const firstSheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(firstSheet, { header:1 });
+    const headers = (rows[0] || []).map(h => String(h||'').trim());
+    if(headers.includes('模块玩法') || headers.includes('奖励内容') || headers.includes('领取条件')) {
+        return parsePlannerTable(wb);
+    }
+    // 兜底：尝试按策划表解析
+    return parsePlannerTable(wb);
+}
+
+// ===== 标准模板格式解析 =====
+function parseStandardTemplate(wb) {
+    const result = { type:'standard', project:{}, modules:{}, moduleData:{} };
+    
+    // 项目基础信息
+    const infoSheet = wb.Sheets['项目基础信息'];
+    if(infoSheet) {
+        const rows = XLSX.utils.sheet_to_json(infoSheet, { header:1 });
+        const map = {};
+        rows.slice(1).forEach(r => { if(r[0]) map[String(r[0]).trim()] = String(r[1]||'').trim(); });
+        result.project = {
+            name: map['活动名称'] || '',
+            game: map['游戏名称'] || '',
+            year: map['活动时间-年'] || '',
+            month: map['活动时间-月'] || '',
+            day: map['活动时间-日'] || '',
+            bgColor: map['页面背景色'] || '',
+            primaryColor: map['主题强调色'] || '',
+            enterBtn: map['进入游戏按钮文案'] || '',
+        };
+    }
+
+    // 模块启用配置
+    const modSheet = wb.Sheets['模块启用配置'];
+    if(modSheet) {
+        const rows = XLSX.utils.sheet_to_json(modSheet, { header:1 });
+        rows.slice(1).forEach(r => {
+            const id = String(r[0]||'').trim();
+            const enabled = String(r[2]||'').trim();
+            if(id) result.modules[id] = (enabled === '是');
+        });
+    }
+
+    // 口令码
+    const rpSheet = wb.Sheets['口令码'];
+    if(rpSheet) {
+        const map = sheetToFieldMap(rpSheet);
+        const d = { title: map['模块标题']||'', subtitle: map['副标题']||'' };
+        const l1count = parseInt(map['奖池1数量'])||3;
+        const l2count = parseInt(map['奖池2数量'])||3;
+        d.leftItems = [];
+        for(let i=1;i<=l1count;i++) d.leftItems.push(map[`奖池1奖品${i}名称`]||`奖品${i}`);
+        d.rightItems = [];
+        for(let i=1;i<=l2count;i++) d.rightItems.push(map[`奖池2奖品${i}名称`]||`奖品${i}`);
+        result.moduleData.redpacket = d;
+    }
+
+    // 签到
+    const sigSheet = wb.Sheets['签到'];
+    if(sigSheet) {
+        const map = sheetToFieldMap(sigSheet);
+        const d = { title: map['模块标题']||'', subtitle: map['副标题']||'', btnText: map['签到按钮文案']||'签到领取' };
+        d.days = [];
+        for(let i=1;i<=7;i++) d.days.push(map[`第${i}天奖品`]||'6或88 Q币');
+        d.withLottery = (map['是否带抽奖']||'').includes('是');
+        d.lotteryBtn = map['抽奖按钮文案']||'立即抽奖';
+        result.moduleData.signin = d;
+    }
+
+    // 抽奖
+    const lotSheet = wb.Sheets['抽奖'];
+    if(lotSheet) {
+        const map = sheetToFieldMap(lotSheet);
+        const d = { title: map['模块标题']||'', subtitle: map['副标题']||'' };
+        d.kind = (map['抽奖类型']||'').includes('多') ? 'multi' : 'grid9';
+        const count = parseInt(map['奖品数量'])||9;
+        d.prizes = [];
+        for(let i=1;i<=count;i++) d.prizes.push(map[`奖品${i}名称`]||`奖品${i}`);
+        d.guaranteePrefix = map['保底提示-前缀']||'再抽';
+        d.guaranteeCount = map['保底提示-次数']||'3';
+        d.guaranteeSuffix = map['保底提示-后缀']||'次即可获得保底奖励：';
+        d.guaranteePrize = map['保底奖品']||'6Q币';
+        d.btn1 = map['按钮1文案']||'立即抽奖';
+        d.btn2 = map['按钮2文案']||'十连抽';
+        d.tasks = [];
+        for(let i=1;i<=10;i++) {
+            const desc = map[`任务${i}描述`];
+            if(desc) d.tasks.push({ text:desc, reward:map[`任务${i}奖励`]||'' });
+        }
+        result.moduleData.lottery = d;
+    }
+
+    // 更多福利内容
+    const moreSheet = wb.Sheets['更多福利内容'];
+    if(moreSheet) {
+        const map = sheetToFieldMap(moreSheet);
+        const d = { title: map['模块标题']||'更多福利内容', groups:[] };
+        const groupCount = parseInt(map['栏目数量'])||2;
+        for(let g=1;g<=groupCount;g++) {
+            const group = { label: map[`第${g}栏标题`]||'', btnText: map[`第${g}栏按钮`]||'立即领取', items:[] };
+            const ic = parseInt(map[`第${g}栏道具数量`])||3;
+            for(let i=1;i<=ic;i++) group.items.push(map[`第${g}栏道具${i}`]||`道具${i}`);
+            d.groups.push(group);
+        }
+        result.moduleData.more = d;
+    }
+
+    // 通行证
+    const passSheet = wb.Sheets['通行证'];
+    if(passSheet) {
+        const map = sheetToFieldMap(passSheet);
+        result.moduleData.pass = {
+            title: map['模块标题']||'通行证',
+            subtitle: map['副标题']||'',
+            mode: (map['模式']||'').includes('带任务') ? 'withTask' : 'noTask'
+        };
+    }
+
+    return result;
+}
+
+// ===== 策划表格智能解析 =====
+function parsePlannerTable(wb) {
+    const result = { type:'planner', project:{}, modules:{}, moduleData:{} };
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header:1 });
+    if(rows.length < 2) return result;
+
+    const headers = rows[0].map(h => String(h||'').trim());
+    const colIdx = {};
+    ['活动规则','模块玩法','领取条件','奖励内容','道具数量'].forEach(name => {
+        const i = headers.indexOf(name);
+        if(i >= 0) colIdx[name] = i;
+    });
+
+    // 按模块玩法分组
+    const moduleGroups = {};
+    let currentModule = '';
+    for(let r=1; r<rows.length; r++) {
+        const row = rows[r] || [];
+        const mod = String(row[colIdx['模块玩法']]||'').trim();
+        if(mod) currentModule = mod;
+        if(!currentModule) continue;
+        if(!moduleGroups[currentModule]) moduleGroups[currentModule] = [];
+        moduleGroups[currentModule].push({
+            rule: String(row[colIdx['活动规则']]||'').trim(),
+            condition: String(row[colIdx['领取条件']]||'').trim(),
+            reward: String(row[colIdx['奖励内容']]||'').trim(),
+            count: String(row[colIdx['道具数量']]||'').trim(),
+        });
+    }
+
+    // 映射到工具模块
+    Object.entries(moduleGroups).forEach(([mod, items]) => {
+        const modLower = mod.toLowerCase();
+        if(modLower.includes('抽奖')) {
+            result.modules.lottery = true;
+            const prizes = items.filter(it => it.reward && it.condition).map(it => it.reward.split('（')[0].split('(')[0].trim());
+            result.moduleData.lottery = {
+                title: '做任务天天抽大奖',
+                subtitle: items[0]?.rule || '',
+                kind: prizes.length > 9 ? 'multi' : 'grid9',
+                prizes: prizes.length ? prizes : undefined,
+                tasks: []
+            };
+            // 提取任务
+            const ruleText = items[0]?.rule || '';
+            const taskMatches = ruleText.match(/\d、[^）\n]+/g);
+            if(taskMatches) {
+                result.moduleData.lottery.tasks = taskMatches.map(t => ({ text: t.replace(/^\d、/,'').trim(), reward:'抽奖机会+1' }));
+            }
+        }
+        else if(modLower.includes('签到')) {
+            result.modules.signin = true;
+            const days = items.filter(it => it.condition && it.condition.includes('登录'));
+            result.moduleData.signin = {
+                title: '7天签到领好礼',
+                subtitle: items[0]?.rule || '',
+                days: days.map(d => d.reward.split('（')[0].split('(')[0].trim()),
+            };
+        }
+        else if(modLower.includes('口令码')) {
+            result.modules.redpacket = true;
+            const prizes = items.filter(it => it.reward).map(it => it.reward.split('（')[0].split('(')[0].trim());
+            // 分成两个奖池（简单对半分）
+            const half = Math.ceil(prizes.length / 2);
+            result.moduleData.redpacket = {
+                title: '发红包给好友 赢海量好货',
+                subtitle: items[0]?.rule || '',
+                leftItems: prizes.slice(0, half),
+                rightItems: prizes.slice(half),
+            };
+        }
+        else if(modLower.includes('更多福利') || modLower.includes('福利领取')) {
+            result.modules.more = true;
+            // 按领取条件分组
+            const groups = {};
+            items.forEach(it => {
+                const key = it.condition || '福利';
+                if(!groups[key]) groups[key] = [];
+                groups[key].push(it.reward.split('（')[0].split('(')[0].trim());
+            });
+            result.moduleData.more = {
+                title: '更多福利内容',
+                groups: Object.entries(groups).map(([label, rewards]) => ({
+                    label, btnText:'立即领取',
+                    items: rewards.filter(Boolean).slice(0, 4)
+                })).slice(0, 5)
+            };
+        }
+    });
+
+    return result;
+}
+
+// ===== 确认弹窗 =====
+function showSmartImportConfirm(result) {
+    const modNames = { redpacket:'口令码', signin:'签到', lottery:'抽奖', more:'更多福利内容', pass:'通行证', content:'内容组件', custom:'自由定制组件' };
+    let summary = `<div style="font-size:13px;color:var(--text-2);line-height:1.8">`;
+    summary += `<p><b>识别格式：</b>${result.type === 'standard' ? '标准模板' : '策划配置表'}</p>`;
+    if(result.project.name) summary += `<p><b>活动名称：</b>${result.project.name}</p>`;
+    if(result.project.game) summary += `<p><b>游戏：</b>${result.project.game}</p>`;
+
+    const enabledMods = Object.entries(result.modules).filter(([,v])=>v).map(([k])=>modNames[k]||k);
+    const dataMods = Object.keys(result.moduleData).map(k=>modNames[k]||k);
+    const allMods = [...new Set([...enabledMods, ...dataMods])];
+    if(allMods.length) summary += `<p><b>识别到的模块：</b>${allMods.join('、')}</p>`;
+
+    Object.entries(result.moduleData).forEach(([key, data]) => {
+        const name = modNames[key]||key;
+        if(data.prizes) summary += `<p>· ${name}：${data.prizes.length} 个奖品</p>`;
+        if(data.leftItems) summary += `<p>· ${name}：奖池1 ${data.leftItems.length}个 / 奖池2 ${(data.rightItems||[]).length}个</p>`;
+        if(data.days) summary += `<p>· ${name}：${data.days.length} 天奖品</p>`;
+        if(data.groups) summary += `<p>· ${name}：${data.groups.length} 个栏目</p>`;
+        if(data.tasks && data.tasks.length) summary += `<p>· ${name} 任务：${data.tasks.length} 条</p>`;
+    });
+    summary += `</div>`;
+
+    // 用简单的 overlay 弹窗
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.id = 'smartImportOverlay';
+    overlay.onclick = (e) => { if(e.target===overlay) overlay.remove(); };
+    overlay.innerHTML = `
+        <div class="dialog-box" style="max-width:520px">
+            <div class="dialog-title">📊 智能识别结果</div>
+            ${summary}
+            <div style="margin-top:16px;padding:10px;background:var(--danger-soft);border-radius:8px;font-size:12px;color:var(--danger)">
+                ⚠️ 导入将覆盖当前项目的文案数据（图片资源不受影响）。建议先保存当前项目。
+            </div>
+            <div class="dialog-actions">
+                <button class="btn btn-outline" onclick="document.getElementById('smartImportOverlay').remove()">取消</button>
+                <button class="btn btn-primary" onclick="applySmartImport();document.getElementById('smartImportOverlay').remove()">确认导入</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+
+    // 暂存解析结果
+    window._smartImportResult = result;
+}
+
+// ===== 应用导入数据 =====
+function applySmartImport() {
+    const result = window._smartImportResult;
+    if(!result) return;
+
+    // 项目信息
+    if(result.project.name && currentProjectMeta) {
+        currentProjectMeta.name = result.project.name;
+        if(result.project.game) currentProjectMeta.game = result.project.game;
+        if(result.project.year && result.project.month && result.project.day) {
+            currentProjectMeta.time = `${result.project.year}.${result.project.month}.${result.project.day}`;
+        }
+        updateHeaderProjectInfo();
+    }
+
+    // 配色
+    if(result.project.bgColor) { colors.background = result.project.bgColor; document.getElementById('colorBg').value = colors.background; document.getElementById('colorBgHex').value = colors.background; }
+    if(result.project.primaryColor) { colors.primary = result.project.primaryColor; document.getElementById('colorPrimary').value = colors.primary; document.getElementById('colorPrimaryHex').value = colors.primary; }
+    if(result.project.enterBtn) { enterBtnText = result.project.enterBtn; const ebi = document.getElementById('enterBtnTextInput'); if(ebi) ebi.value = enterBtnText; }
+
+    // 模块启用
+    Object.entries(result.modules).forEach(([id, enabled]) => {
+        const m = modules.find(mm => mm.id === id);
+        if(m) m.enabled = !!enabled;
+    });
+
+    // 口令码数据
+    if(result.moduleData.redpacket) {
+        const d = result.moduleData.redpacket;
+        const m = modules.find(mm => mm.id === 'redpacket');
+        if(m) {
+            const rd = getRedpacketData(m.instanceId);
+            if(rd) {
+                if(d.title) rd.title = d.title;
+                if(d.subtitle) rd.subtitle = d.subtitle;
+                if(d.leftItems) { rd.leftIcons = d.leftItems.map((name,i) => ({ ...rd.leftIcons[i] || {url:'assets/image/morenjinbi.png'}, name })); }
+                if(d.rightItems) { rd.rightIcons = d.rightItems.map((name,i) => ({ ...rd.rightIcons[i] || {url:'assets/image/morenjinbi.png'}, name })); }
+            }
+        }
+    }
+
+    // 签到数据
+    if(result.moduleData.signin) {
+        const d = result.moduleData.signin;
+        if(d.title) signinData.title = d.title;
+        if(d.subtitle) signinData.subtitle = d.subtitle;
+        if(d.days && d.days.length) {
+            signinData.dayPrize = d.days[0];
+            signinData.day7Prize = d.days[6] || d.days[d.days.length-1] || '';
+        }
+    }
+
+    // 抽奖数据
+    if(result.moduleData.lottery) {
+        const d = result.moduleData.lottery;
+        const m = modules.find(mm => mm.id === 'lottery');
+        if(m) {
+            const ld = getLotteryData(m.instanceId);
+            if(ld) {
+                if(d.title) ld.title = d.title;
+                if(d.subtitle) ld.subtitle = d.subtitle;
+                if(d.kind) ld.kind = d.kind;
+                if(d.prizes) ld.prizes = d.prizes.map((name,i) => ({ name, img: (ld.prizes[i]||{}).img || 'assets/image/morenjinbi.png' }));
+                if(d.guaranteePrefix) ld.guaranteePrefix = d.guaranteePrefix;
+                if(d.guaranteeCount) ld.guaranteeCount = d.guaranteeCount;
+                if(d.guaranteeSuffix) ld.guaranteeSuffix = d.guaranteeSuffix;
+                if(d.guaranteePrize) ld.guaranteePrize = d.guaranteePrize;
+                if(d.btn1) ld.btn1Text = d.btn1;
+                if(d.btn2) ld.btn2Text = d.btn2;
+                if(d.tasks && d.tasks.length) ld.tasks = d.tasks;
+            }
+        }
+    }
+
+    // 更多福利内容
+    if(result.moduleData.more) {
+        const d = result.moduleData.more;
+        const m = modules.find(mm => mm.id === 'more');
+        if(m) {
+            const md = getMoreData(m.instanceId);
+            if(md) {
+                if(d.title) md.title = d.title;
+                if(d.groups) {
+                    md.groups = d.groups.map(g => ({
+                        label: g.label || '',
+                        btnText: g.btnText || '立即领取',
+                        items: (g.items||[]).map(name => ({ img:'assets/image/morenjinbi.png', name }))
+                    }));
+                }
+            }
+        }
+    }
+
+    // 通行证
+    if(result.moduleData.pass) {
+        const d = result.moduleData.pass;
+        const m = modules.find(mm => mm.id === 'pass');
+        if(m) {
+            const pd = getPassData(m.instanceId);
+            if(pd) {
+                if(d.title) pd.title = d.title;
+                if(d.subtitle) pd.subtitle = d.subtitle;
+                if(d.mode) pd.mode = d.mode;
+            }
+        }
+    }
+
+    // 刷新
+    renderModuleList();
+    renderPreview();
+    updateInfo();
+    pushSnapshot();
+}
+
+function sheetToFieldMap(sheet) {
+    const rows = XLSX.utils.sheet_to_json(sheet, { header:1 });
+    const map = {};
+    rows.slice(1).forEach(r => { if(r[0]) map[String(r[0]).trim()] = String(r[1]||'').trim(); });
+    return map;
+}
+
+// ===== 上传道具图包（ZIP）=====
+function smartImportIcons() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.zip';
+    input.onchange = async (e) => {
+        const f = e.target.files[0];
+        if(!f) return;
+        try {
+            // 尝试两种编码解压
+            let imageFiles = await extractImagesFromZip(f);
+
+            if(Object.keys(imageFiles).length === 0) {
+                alert('ZIP 中没有找到图片文件（支持 PNG/JPG/WEBP/SVG/GIF）');
+                return;
+            }
+
+            const matchResult = matchIconsToData(imageFiles);
+            showIconImportConfirm(matchResult, imageFiles);
+        } catch(err) {
+            alert('ZIP 解析失败：' + err.message);
+            console.error(err);
+        }
+    };
+    input.click();
+}
+
+async function extractImagesFromZip(file) {
+    const supportedExts = ['.png','.jpg','.jpeg','.webp','.gif','.svg'];
+    const imageFiles = {};
+
+    // 先尝试正常 UTF-8 解压
+    let zip = await JSZip.loadAsync(file);
+    let hasGarbled = false;
+
+    // 检测是否有乱码文件名（含有替换字符或不合理字符）
+    zip.forEach((path) => {
+        const fileName = path.split('/').pop();
+        if(fileName && /[\ufffd\u0000-\u001f]/.test(fileName)) hasGarbled = true;
+        // 如果文件名几乎全是单字节非 ASCII，可能是 GBK 编码
+        if(fileName && !/^[\x00-\x7f\u4e00-\u9fff\u3000-\u303f\uff00-\uffef\u2000-\u206f]+$/.test(fileName)) {
+            // 含有非中文非ASCII的奇怪字符，可能是编码问题
+            if(!/^[a-zA-Z0-9_\-. \u4e00-\u9fff\u3000-\u303f\uff08\uff09\uff0c（）、：]+$/.test(fileName)) {
+                hasGarbled = true;
+            }
+        }
+    });
+
+    // 如果检测到乱码，尝试用 decodeURIComponent 或 TextDecoder GBK
+    if(hasGarbled) {
+        try {
+            // 重新用 raw binary 读取并手动解码文件名
+            const arrayBuffer = await file.arrayBuffer();
+            zip = await JSZip.loadAsync(arrayBuffer, {
+                decodeFileName: function(bytes) {
+                    // 尝试 GBK 解码
+                    try {
+                        const decoder = new TextDecoder('gbk');
+                        return decoder.decode(bytes);
+                    } catch(e) {
+                        // fallback UTF-8
+                        const decoder = new TextDecoder('utf-8');
+                        return decoder.decode(bytes);
+                    }
+                }
+            });
+        } catch(e) {
+            console.warn('GBK decode failed, using original:', e);
+        }
+    }
+
+    const promises = [];
+    zip.forEach((path, entry) => {
+        if(entry.dir) return;
+        const fileName = path.split('/').pop();
+        if(!fileName) return;
+        const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+        if(!supportedExts.includes(ext)) return;
+        const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'));
+        promises.push(
+            entry.async('base64').then(base64 => {
+                const mime = ext === '.png' ? 'image/png' : ext === '.svg' ? 'image/svg+xml' : ext === '.webp' ? 'image/webp' : ext === '.gif' ? 'image/gif' : 'image/jpeg';
+                imageFiles[nameWithoutExt] = `data:${mime};base64,${base64}`;
+            })
+        );
+    });
+    await Promise.all(promises);
+    return imageFiles;
+}
+
+function matchIconsToData(imageFiles) {
+    const fileNames = Object.keys(imageFiles);
+    const matched = [];
+    const unmatched = [...fileNames];
+
+    // 收集所有当前数据中的道具名称及其引用位置
+    const allItems = collectAllItemNames();
+
+    allItems.forEach(item => {
+        const name = item.name;
+        if(!name) return;
+        // 精确匹配
+        let matchKey = fileNames.find(fn => fn === name);
+        // 模糊匹配：文件名包含道具名 或 道具名包含文件名
+        if(!matchKey) matchKey = fileNames.find(fn => fn.includes(name) || name.includes(fn));
+        // 去掉数量后缀再匹配：如 "88Q币" 匹配 "88Q币*1"
+        if(!matchKey) {
+            const cleanName = name.replace(/[*×xX]\d+$/,'').trim();
+            matchKey = fileNames.find(fn => fn === cleanName || fn.includes(cleanName) || cleanName.includes(fn));
+        }
+        if(matchKey) {
+            matched.push({ ...item, matchedFile: matchKey });
+            const idx = unmatched.indexOf(matchKey);
+            if(idx >= 0) unmatched.splice(idx, 1);
+        }
+    });
+
+    return { matched, unmatched, total: fileNames.length };
+}
+
+function collectAllItemNames() {
+    const items = [];
+
+    // 口令码奖品
+    modules.filter(m => m.id === 'redpacket').forEach(m => {
+        const d = getRedpacketData(m.instanceId);
+        if(!d) return;
+        (d.leftIcons||[]).forEach((ic, i) => { if(ic.name) items.push({ module:'redpacket', instanceId:m.instanceId, side:'left', idx:i, name:ic.name }); });
+        (d.rightIcons||[]).forEach((ic, i) => { if(ic.name) items.push({ module:'redpacket', instanceId:m.instanceId, side:'right', idx:i, name:ic.name }); });
+    });
+
+    // 签到图标
+    if(signinData && signinData.signinIcons) {
+        signinData.signinIcons.forEach((_, i) => {
+            const dayLabel = signinData.days ? signinData.days[i] : `第${i+1}天`;
+            items.push({ module:'signin', idx:i, name:dayLabel });
+        });
+    }
+
+    // 抽奖奖品
+    modules.filter(m => m.id === 'lottery').forEach(m => {
+        const d = getLotteryData(m.instanceId);
+        if(!d) return;
+        (d.prizes||[]).forEach((p, i) => items.push({ module:'lottery', instanceId:m.instanceId, idx:i, name:p.name }));
+    });
+
+    // 更多福利
+    modules.filter(m => m.id === 'more').forEach(m => {
+        const d = getMoreData(m.instanceId);
+        if(!d) return;
+        (d.groups||[]).forEach((g, gi) => {
+            (g.items||[]).forEach((it, ii) => items.push({ module:'more', instanceId:m.instanceId, groupIdx:gi, idx:ii, name:it.name }));
+        });
+    });
+
+    // 皮肤模块奖品
+    if(skinData && skinData.groups) {
+        skinData.groups.forEach((g, gi) => {
+            (g.rewards||[]).forEach((r, ri) => items.push({ module:'skin', groupIdx:gi, idx:ri, name:r.name }));
+        });
+    }
+
+    return items;
+}
+
+function showIconImportConfirm(matchResult, imageFiles) {
+    const { matched, unmatched, total } = matchResult;
+    let summary = `<div style="font-size:13px;color:var(--text-2);line-height:1.8">`;
+    summary += `<p><b>ZIP 中图片数量：</b>${total} 张</p>`;
+    summary += `<p><b>成功匹配：</b>${matched.length} 张</p>`;
+    summary += `<p><b>未匹配：</b>${unmatched.length} 张</p>`;
+
+    if(matched.length > 0) {
+        summary += `<div style="margin-top:8px;max-height:200px;overflow-y:auto;padding:8px;background:var(--bg-elev-1);border-radius:8px;font-size:12px">`;
+        matched.slice(0, 20).forEach(m => {
+            summary += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <img src="${imageFiles[m.matchedFile]}" style="width:24px;height:24px;border-radius:4px;object-fit:cover">
+                <span style="color:var(--text-3)">${m.matchedFile}</span>
+                <span style="color:var(--success)">→</span>
+                <span>${m.name}</span>
+            </div>`;
+        });
+        if(matched.length > 20) summary += `<div style="color:var(--text-4)">... 还有 ${matched.length-20} 项</div>`;
+        summary += `</div>`;
+    }
+
+    if(unmatched.length > 0) {
+        summary += `<div style="margin-top:8px;font-size:12px;color:var(--text-4)"><b>未匹配文件：</b>${unmatched.slice(0,10).join('、')}${unmatched.length>10?'..':''}</div>`;
+    }
+    summary += `</div>`;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.id = 'iconImportOverlay';
+    overlay.onclick = (e) => { if(e.target===overlay) overlay.remove(); };
+    overlay.innerHTML = `
+        <div class="dialog-box" style="max-width:520px">
+            <div class="dialog-title">🖼️ 道具图包匹配结果</div>
+            ${summary}
+            ${matched.length === 0 ? '<div style="margin-top:12px;padding:10px;background:var(--danger-soft);border-radius:8px;font-size:12px;color:var(--danger)">未找到任何匹配。请确认图片文件名和工具中的道具名称一致（不含扩展名）。</div>' : ''}
+            <div class="dialog-actions">
+                <button class="btn btn-outline" onclick="document.getElementById('iconImportOverlay').remove()">取消</button>
+                ${matched.length > 0 ? `<button class="btn btn-primary" onclick="applyIconImport();document.getElementById('iconImportOverlay').remove()">确认导入 ${matched.length} 张</button>` : ''}
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+
+    window._iconImportData = { matched, imageFiles };
+}
+
+function applyIconImport() {
+    const { matched, imageFiles } = window._iconImportData || {};
+    if(!matched || !imageFiles) return;
+
+    matched.forEach(item => {
+        const url = imageFiles[item.matchedFile];
+        if(!url) return;
+
+        if(item.module === 'redpacket') {
+            const d = getRedpacketData(item.instanceId);
+            if(!d) return;
+            const icons = item.side === 'left' ? d.leftIcons : d.rightIcons;
+            if(icons[item.idx]) icons[item.idx].url = url;
+        }
+        else if(item.module === 'lottery') {
+            const d = getLotteryData(item.instanceId);
+            if(d && d.prizes[item.idx]) d.prizes[item.idx].img = url;
+        }
+        else if(item.module === 'more') {
+            const d = getMoreData(item.instanceId);
+            if(d && d.groups[item.groupIdx] && d.groups[item.groupIdx].items[item.idx]) {
+                d.groups[item.groupIdx].items[item.idx].img = url;
+            }
+        }
+        else if(item.module === 'signin') {
+            if(signinData.signinIcons && signinData.signinIcons[item.idx] !== undefined) {
+                signinData.signinIcons[item.idx] = url;
+            }
+        }
+        else if(item.module === 'skin') {
+            if(skinData && skinData.groups[item.groupIdx] && skinData.groups[item.groupIdx].rewards[item.idx]) {
+                skinData.groups[item.groupIdx].rewards[item.idx].img = url;
+            }
+        }
+    });
+
+    renderModuleList();
+    renderPreview();
+    pushSnapshot();
 }
 
 // ===== Keyboard shortcuts =====
