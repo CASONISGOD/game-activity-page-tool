@@ -9045,6 +9045,9 @@ function renderPreview() {
     html2 += `</div>`;
     c2.innerHTML = html2;
 
+    // 右侧"页面底图"预览：去除所有按钮（保留布局占位），所见即所得 = 导出底图 PNG 的视觉
+    _hideAllPageButtons(c2);
+
     // 渲染 IP 浮层（覆盖在所有模块之上，可拖动）
     renderIpOverlay(c1, false);
     renderIpOverlay(c2, true);
@@ -12602,10 +12605,15 @@ async function exportBgImage() {
     const btn = document.getElementById('exportBgBtn');
     overlay.classList.remove('hidden');
     btn.disabled = true;
+
     try {
         bar.style.width='10%'; txt.textContent='正在渲染页面底图...';
         await new Promise(r=>setTimeout(r,200));
         const c2 = document.getElementById('previewContainerBg');
+
+        // 注：底图容器在 renderPreview 阶段已经把所有按钮 visibility:hidden（保留占位），
+        //    所以这里直接截图即可，所见即所得。
+
         bar.style.width='30%'; txt.textContent='正在预处理图片资源...';
         await convertImagesToBase64(c2);
         bar.style.width='50%'; txt.textContent='正在生成底图图片...';
@@ -12634,6 +12642,53 @@ async function exportBgImage() {
         // 重新渲染预览恢复原始图片路径
         if(currentView === 'host') renderPreview(); else renderGuestPreview();
     }
+}
+
+/**
+ * 隐藏指定容器内的"页面按钮"（保留原占位空间）。
+ * 返回一个 restore() 函数，调用即恢复全部按钮的可见性。
+ * 识别策略：
+ *   - inline style 含 "box-shadow ... inset"（getBtnStyle 输出特征）
+ *   - 已知按钮 className 兜底（避免某些按钮以子节点形式继承样式）
+ * @param {HTMLElement} container
+ * @returns {() => void} restore
+ */
+function _hideAllPageButtons(container) {
+    if(!container) return () => {};
+
+    const restorers = [];
+    const seen = new Set();
+    const hide = (el) => {
+        if(!el || seen.has(el)) return;
+        seen.add(el);
+        const oldVisibility = el.style.visibility;
+        restorers.push(() => { el.style.visibility = oldVisibility; });
+        el.style.visibility = 'hidden';
+    };
+
+    // 1) 按 inline style 特征：含 inset 的 box-shadow（getBtnStyle 输出）
+    container.querySelectorAll('[style*="inset"]').forEach(el => {
+        const s = el.getAttribute('style') || '';
+        if(/box-shadow[^;]*inset/i.test(s)) hide(el);
+    });
+
+    // 2) 已知按钮 className 兜底
+    const btnSelector = [
+        '.m-role-enter-btn',
+        '.redpacket-copy-btn',
+        '.redpacket-use-btn',
+        '.lottery-task-slice-btn',
+        '.more-benefit-slice-btn',
+        '.benefit-btn',
+        '.m-btn-primary',
+        '.m-btn-sm',
+        '.g-btn',
+        '.g-send-btn',
+    ].join(',');
+    container.querySelectorAll(btnSelector).forEach(hide);
+
+    // 返回 restore 函数
+    return () => { restorers.forEach(fn => { try { fn(); } catch(_){} }); };
 }
 
 // ===== Slice / 切图功能 =====
@@ -12868,7 +12923,8 @@ function drawEnterButtonState(originalTarget, text) {
     const textStyle = window.getComputedStyle(textNode);
     const rect = originalTarget.getBoundingClientRect();
     const scale = 2;
-    const pad = 8;
+    // 切图不再附加透明 padding —— 输出尺寸 = 按钮真实 @2x 尺寸
+    const pad = 0;
     const w = Math.ceil(rect.width);
     const h = Math.ceil(rect.height);
     const radius = parseFloat(style.borderRadius) || 0;
@@ -12944,13 +13000,15 @@ async function captureSliceTarget(target, textOverride) {
     try {
         await new Promise(requestAnimationFrame);
         await convertImagesToBase64(target);
+        // 切图尺寸严格按按钮真实大小，不再附加透明 padding；
+        // 项目内按钮使用 inset box-shadow，不会溢出元素边界，无需额外留白
         const dataUrl = await htmlToImage.toPng(target, {
             pixelRatio: 2,
             cacheBust: true,
             backgroundColor: null,
             style: { transform: 'none' },
         });
-        return addTransparentPaddingToDataUrl(dataUrl, 8, 2);
+        return dataUrl;
     } finally {
         if(textOverride != null) {
             textEl.textContent = originalText;
